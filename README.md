@@ -7,7 +7,9 @@ Este material ha sido cuidadosamente preparado y es gestionado por Nicolás Flux
 ## Sobre el Ayudante
 
 Soy Nicolás, estudiante de Ingeniería Civil Informática, con una especialización en desarrollo móvil y programación científica. Mi pasión es aplicar la tecnología para crear soluciones innovadoras y eficientes. Como tu ayudante, mi meta es guiarte a través de los temas avanzados de Python, ayudándote a construir una base sólida para tus futuros proyectos y desafíos profesionales.
-Si deseas conocer más sobre mi perfil y experiencia, puedes visitar mi [LinkedIn](https://www.linkedin.com/in/nflux%C3%A1/). ## Estructura del Repositorio 📂
+Si deseas conocer más sobre mi perfil y experiencia, puedes visitar mi [LinkedIn](https://www.linkedin.com/in/nflux%C3%A1/). 
+
+## Estructura del Repositorio 📂
 
 Al igual que el curso introductorio, este repositorio se organiza en carpetas semanales, desde la `semana-01` hasta la `semana-10`. Cada semana se enfoca en temas específicos del programa avanzado:
 
