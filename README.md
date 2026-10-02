@@ -1,74 +1,72 @@
-# Ayudantía de Programación Avanzada en Python 🐍🚀
+# Ayudantía de Programación Avanzada en Python
 
-¡Te doy la bienvenida al repositorio de la Ayudantía de Programación Avanzada! Este espacio está diseñado para llevar tus habilidades en Python al siguiente nivel, explorando conceptos más sofisticados y herramientas para el desarrollo de aplicaciones robustas e interactivas.
+Material de apoyo de la ayudantía del ramo **Programación Avanzada en Python**
+(Universidad Autónoma de Chile, sede Talca), año 2025. Son ejercicios resueltos y
+comentados, desde programación orientada a objetos hasta interfaces gráficas con Tkinter.
 
-Este material ha sido cuidadosamente preparado y es gestionado por Nicolás Fluxá Morán, Ayudante del curso.
+## Contenido
 
-## Sobre el Ayudante
+Hay una carpeta por semana (`Semana01` a `Semana10`). Los ejercicios principales están
+en la carpeta de la semana y los complementarios, en su subcarpeta `Opcional/`.
 
-Soy Nicolás, estudiante de Ingeniería Civil Informática, con una especialización en desarrollo móvil y programación científica. Mi pasión es aplicar la tecnología para crear soluciones innovadoras y eficientes. Como tu ayudante, mi meta es guiarte a través de los temas avanzados de Python, ayudándote a construir una base sólida para tus futuros proyectos y desafíos profesionales.
-Si deseas conocer más sobre mi perfil y experiencia, puedes visitar mi [LinkedIn](https://www.linkedin.com/in/nflux%C3%A1/). 
+| Carpeta | Tema | Ejercicios | Opcional |
+| --- | --- | --- | --- |
+| `Semana01` | Clases y objetos: atributos, constructor `__init__` y métodos | `mi_primera_clase_objeto.py`<br>`clase_con_constructor_y_metodo.py` | `clase_rectangulo_calculos.py` |
+| `Semana02` | Encapsulamiento y herencia simple (`super()`, sobrescritura de métodos) | `encapsulamiento_basico_cuenta_bancaria.py`<br>`herencia_simple_animal.py` | `herencia_con_vehiculo.py` |
+| `Semana03` | Polimorfismo (con herencia y *duck typing*) y abstracción | `polimorfismo_con_herencia_figuras.py`<br>`duck_typing_y_protocolos.py` | `clases_abstractas_conceptuales_instrumentos.py` |
+| `Semana04` | Excepciones: `try`/`except`/`else`/`finally`, `raise` y excepciones propias | `manejo_de_errores_try_except.py`<br>`try_except_else_finally_archivo.py` | `validacion_con_raiz_y_excepciones_personalizadas.py` |
+| `Semana05` | Recursividad: caso base y caso recursivo, memoización | `factoria_recursivo.py`<br>`suma_lista_recursivo.py` | `fibonacci_recursivo_y_memoizacion.py` |
+| `Semana06` | Propiedades (`@property`), métodos de clase y métodos estáticos | `propiedades_getter_setter_deleter.py`<br>`metodo_clase_y_estaticos.py` | `clase_configuracion_app_completa.py` |
+| `Semana07` | Tkinter I: ventana, `Label`, `Button` y eventos | `primer_ventana _tkinter.py`<br>`botones_y_eventos_simples_tkinter.py` | `entrada_texto_y_eco_tkinter.py` (pendiente) |
+| `Semana08` | Tkinter II: `grid()`, `Frame` y variables de control (`StringVar`) | `layout_con_grid_calculadora_simple.py`<br>`uso_de_frame_y_variable_tkinter.py` | `formulario_basico_varios_widget.py` |
+| `Semana09` | Tkinter III: diálogos, menús y aplicaciones estructuradas con clases | `dialogos_y_menus_tkinter.py`<br>`app_tkinter_con_clases_oop.py` | `editor_texto_simple.py` |
+| `Semana10` | Proyecto final: Mini Paint con Tkinter | `mini_paint_basico_tkinter.py`<br>`mejorando_mini_paint.py` | `juego_adivina_numero_gui.py` |
 
-## Estructura del Repositorio 📂
+## Cómo está armado cada archivo
 
-Al igual que el curso introductorio, este repositorio se organiza en carpetas semanales, desde la `semana-01` hasta la `semana-10`. Cada semana se enfoca en temas específicos del programa avanzado:
+Cada `.py` es independiente y sigue la misma estructura:
 
-* **`Ayudantia/`**: Contiene los ejercicios principales y ejemplos que abordaremos en las sesiones de ayudantía. Estos están diseñados para ilustrar los conceptos clave de la semana.
-* **`Opcional/`**: Incluye ejercicios complementarios o desafíos que te permitirán profundizar y practicar de manera autónoma los temas tratados.
+1. **Enunciado**: el problema a resolver, al comienzo del archivo.
+2. **Código**: una solución comentada.
+3. **Preguntas de comprensión**: preguntas para reflexionar, al final del archivo
+   (en la Semana 10 se llaman «Puntos clave y preguntas guía»).
 
-Cada archivo de ejercicio (`.py`) sigue una estructura pensada para el aprendizaje:
-1.  **ENUNCIADO**: Descripción detallada del problema o concepto a explorar.
-2.  **CÓDIGO**: Implementación en Python, con comentarios explicativos.
-3.  **PREGUNTAS DE COMPRENSIÓN**: Interrogantes para fomentar la reflexión y consolidar el entendimiento.
+Si estás cursando el ramo, intenta resolver el enunciado por tu cuenta antes de leer el código.
 
-## ¿Cómo Usar Este Repositorio? 💻
+## Cómo ejecutar los ejemplos
 
-1.  **Accede al Material**: Clona el repositorio (`git clone https://github.com/NicolasFluxa/Ayudantia-Programaci-n-Avanzada.git`) o descárgalo como ZIP.
-2.  **Sigue el Ritmo Semanal**: Revisa la carpeta correspondiente a la semana del curso en la que te encuentres.
-3.  **Experimenta y Aprende**:
-    * Analiza los enunciados y trata de plantear tu propia solución antes de revisar el código propuesto.
-    * Ejecuta los scripts `.py` para ver su comportamiento.
-    * Modifica, prueba y "rompe" el código (¡es una gran forma de aprender!).
-    * Dedica tiempo a las "Preguntas de Comprensión" para afianzar los conceptos.
-4.  **Prepara tus Dudas**: Usa este material como base para tus consultas en las sesiones de ayudantía.
+**Requisitos:** Python 3.10 o superior (el material se desarrolló con Python 3.13 y se
+verificó con 3.11 y 3.14). Solo usa la biblioteca estándar, así que no hay nada más que
+instalar. Se asume que ya manejas los fundamentos de Python, los del ramo introductorio
+de Programación.
 
-## Contenido del Curso (Programación Avanzada) 🌟
+1. Descarga el repositorio (botón verde **Code**, luego **Download ZIP**) o clónalo:
 
-En este curso de Programación Avanzada, nos sumergiremos en:
+   ```bash
+   git clone https://github.com/NicolasFluxa/Ayudantia-Programaci-n-Avanzada.git
+   cd Ayudantia-Programaci-n-Avanzada
+   ```
 
-* **Semanas 1-3**: Programación Orientada a Objetos (POO)
-    * Clases, Objetos, `__init__`, Atributos, Métodos.
-    * Encapsulamiento (atributos "privados", getters, setters).
-    * Herencia (simple, `super()`, sobrescritura de métodos).
-    * Polimorfismo (con herencia, Duck Typing).
-    * Abstracción (conceptual).
-* **Semana 4**: Manejo de Errores y Excepciones
-    * `try`, `except`, `else`, `finally`.
-    * Manejo de excepciones comunes y personalizadas (`raise`).
-* **Semana 5**: Recursividad
-    * Funciones recursivas, casos base y recursivos.
-    * Ejemplos clásicos (factorial, Fibonacci) y optimización básica (memoización).
-* **Semana 6**: Tópicos Avanzados de POO
-    * Propiedades (`@property`, setters, deleters).
-    * Métodos Estáticos (`@staticmethod`) y Métodos de Clase (`@classmethod`).
-* **Semanas 7-9**: Desarrollo de Interfaces Gráficas con Tkinter
-    * Introducción a Tkinter, ventanas, widgets básicos (Label, Button, Entry).
-    * Manejo de eventos, layouts (`pack`, `grid`).
-    * Widgets más avanzados (Frame, StringVar, Radiobutton, Checkbutton, Text).
-    * Diálogos estándar, menús y estructura de aplicaciones Tkinter con clases.
-* **Semana 10**: Proyecto Final con Tkinter
-    * Desarrollo de una aplicación GUI de dificultad media, integrando los conceptos de POO y Tkinter.
+2. Ejecuta cualquier archivo desde la carpeta del repositorio:
 
-## Prerrequisitos 🛠️
+   ```bash
+   python Semana01/mi_primera_clase_objeto.py
+   ```
 
-* Conocimientos sólidos de los fundamentos de Python (equivalentes al curso de "Programación" introductorio).
-* Python 3.x instalado.
-* Un editor de código o IDE (VS Code, PyCharm, etc.).
-* ¡Curiosidad y ganas de enfrentar nuevos desafíos de programación!
+   En Windows también puedes usar `py` en lugar de `python`.
 
-## ¿Preguntas o Sugerencias? 🙋
+Ten en cuenta:
 
-Las sesiones de ayudantía son el espacio ideal para plantear tus dudas. Si tienes sugerencias sobre el material del repositorio, no dudes en comentarlas con el ayudante.
+- Las semanas 7 a 10 abren ventanas con Tkinter. Viene incluido con Python en Windows y
+  macOS; en Ubuntu o Debian se instala con `sudo apt install python3-tk`.
+- El archivo de la Semana 07 se llama `primer_ventana _tkinter.py` (con un espacio antes
+  de `_tkinter`), así que hay que escribirlo entre comillas:
+  `python "Semana07/primer_ventana _tkinter.py"`.
+- `Semana04/manejo_de_errores_try_except.py` te pide datos por teclado.
+- `Semana04/try_except_else_finally_archivo.py` crea un archivo `datos_prueba.txt` en la
+  carpeta desde la que lo ejecutas (el repositorio lo ignora).
 
+## Autoría
 
----
+Material preparado por Nicolás Fluxá, ayudante de Programación Avanzada en Python.
+Perfil profesional: [LinkedIn](https://www.linkedin.com/in/nflux%C3%A1/).
