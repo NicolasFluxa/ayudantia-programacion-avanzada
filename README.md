@@ -43,8 +43,8 @@ de Programación.
 1. Descarga el repositorio (botón verde **Code**, luego **Download ZIP**) o clónalo:
 
    ```bash
-   git clone https://github.com/NicolasFluxa/Ayudantia-Programaci-n-Avanzada.git
-   cd Ayudantia-Programaci-n-Avanzada
+   git clone https://github.com/NicolasFluxa/ayudantia-programacion-avanzada.git
+   cd ayudantia-programacion-avanzada
    ```
 
 2. Ejecuta cualquier archivo desde la carpeta del repositorio:
