@@ -1,0 +1,41 @@
+# Archivos que no deben subirse al repositorio.
+
+# --- Python ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales y variables de entorno (.env puede contener claves)
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# Cachés de herramientas, pruebas y cobertura
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# --- Editores e IDEs (configuración personal) ----------------------------
+# JetBrains (PyCharm, IntelliJ)
+.idea/
+*.iml
+# Visual Studio Code
+.vscode/
+# Archivos temporales de editores
+*.swp
+*~
+
+# --- Sistema operativo ------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Archivos que generan los propios ejemplos al ejecutarse ---------------
+# Semana04/try_except_else_finally_archivo.py lo crea en la carpeta desde la
+# que se ejecuta.
+datos_prueba.txt
