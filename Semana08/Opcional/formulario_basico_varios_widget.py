@@ -25,26 +25,32 @@ El formulario debe incluir:
 
 Organiza todos los widgets usando `grid()`. Puedes usar `Frame`s si lo
 consideras útil para agrupar secciones del formulario.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: conocer los widgets de entrada más comunes (`Entry`, `Radiobutton`,
+`Checkbutton`, `Text`) y cómo recolectar sus valores a través de variables de control.
+
+Al ejecutar se abre un formulario con secciones «Datos Personales», «Género»,
+«Intereses», «Comentarios» y el botón «Registrar Datos». Al presionarlo:
+  - si Nombre o Apellido están vacíos, aparece una advertencia y no se registra;
+  - si están completos, se imprime en la consola el resumen (nombre, apellido,
+    género, intereses marcados, comentarios) y se muestra el mismo resumen en
+    una ventana de confirmación.
+(El formulario agrega la opción «Prefiero no decir» al género, que es el valor
+inicial, para no obligar a elegir.)
+
 -------------------------------------------------------------------------------
 """
 import tkinter as tk
 from tkinter import messagebox
 
-# Variables de control de Tkinter
-var_nombre = None
-var_apellido = None
-var_genero = None
-var_interes_deportes = None
-var_interes_musica = None
-var_interes_lectura = None
-text_comentarios = None
-
+# Las variables de control y el widget Text se crean más abajo, a nivel de módulo. La
+# función los lee sin 'global' porque solo se ejecuta al presionar «Registrar», cuando
+# ya existen. (Mira las alternativas del final para evitar variables globales.)
 
 def registrar_datos():
     """Recolecta y muestra los datos del formulario."""
-    global var_nombre, var_apellido, var_genero, var_interes_deportes, \
-        var_interes_musica, var_interes_lectura, text_comentarios
-
     nombre = var_nombre.get()
     apellido = var_apellido.get()
     genero = var_genero.get()  # Obtiene el valor del Radiobutton seleccionado
@@ -87,17 +93,17 @@ raiz.configure(padx=15, pady=15)
 
 # --- Variables de Control Tkinter ---
 # Para Entry
-globals()['var_nombre'] = tk.StringVar()
-globals()['var_apellido'] = tk.StringVar()
+var_nombre = tk.StringVar()
+var_apellido = tk.StringVar()
 
 # Para Radiobuttons de Género
-globals()['var_genero'] = tk.StringVar()
+var_genero = tk.StringVar()
 var_genero.set("No especificado")  # Valor inicial opcional
 
 # Para Checkbuttons de Intereses (usamos IntVar, 1 para marcado, 0 para no marcado)
-globals()['var_interes_deportes'] = tk.IntVar()
-globals()['var_interes_musica'] = tk.IntVar()
-globals()['var_interes_lectura'] = tk.IntVar()
+var_interes_deportes = tk.IntVar()
+var_interes_musica = tk.IntVar()
+var_interes_lectura = tk.IntVar()
 
 # --- Creación y Posicionamiento de Widgets usando grid() ---
 
@@ -117,6 +123,10 @@ entry_apellido.grid(row=1, column=1, sticky="ew", pady=2)
 frame_genero = tk.LabelFrame(raiz, text="Género", padx=10, pady=10)
 frame_genero.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
 
+# Dentro de cada LabelFrame se usa pack(); los LabelFrame en sí se ubican con grid() en la
+# raíz. Está permitido porque son contenedores distintos: lo que NO se puede es mezclar
+# pack() y grid() entre hijos de un MISMO contenedor.
+# Todos los Radiobutton comparten la misma variable (var_genero): por eso solo uno queda marcado.
 tk.Radiobutton(frame_genero, text="Masculino", variable=var_genero, value="Masculino").pack(anchor="w")
 tk.Radiobutton(frame_genero, text="Femenino", variable=var_genero, value="Femenino").pack(anchor="w")
 tk.Radiobutton(frame_genero, text="Otro", variable=var_genero, value="Otro").pack(anchor="w")
@@ -132,16 +142,14 @@ tk.Checkbutton(frame_intereses, text="Lectura", variable=var_interes_lectura).pa
 
 # Sección Comentarios
 tk.Label(raiz, text="Comentarios:").grid(row=3, column=0, columnspan=2, sticky="w", padx=5, pady=(10, 0))
-# Hacemos global la referencia al widget Text
-text_comentarios_ref = tk.Text(raiz, height=5, width=50,
-                               wrap="word")  # wrap="word" para que el texto se ajuste por palabras
-text_comentarios_ref.grid(row=4, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
-globals()['text_comentarios'] = text_comentarios_ref
+text_comentarios = tk.Text(raiz, height=5, width=50,
+                           wrap="word")  # wrap="word" para que el texto se ajuste por palabras
+text_comentarios.grid(row=4, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
 
 # Scrollbar para el widget Text (opcional pero útil)
-scrollbar_comentarios = tk.Scrollbar(raiz, command=text_comentarios_ref.yview)
+scrollbar_comentarios = tk.Scrollbar(raiz, command=text_comentarios.yview)
 scrollbar_comentarios.grid(row=4, column=2, sticky="ns")  # 'ns' para que se estire verticalmente
-text_comentarios_ref.config(yscrollcommand=scrollbar_comentarios.set)
+text_comentarios.config(yscrollcommand=scrollbar_comentarios.set)
 
 # Botón de Registro
 boton_registrar = tk.Button(raiz, text="Registrar Datos", command=registrar_datos, bg="teal", fg="white",
@@ -175,3 +183,82 @@ print("Aplicación de formulario cerrada.")
     o accederías a estos widgets/variables desde un método de la clase?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+def alternativa_1():
+    """Un diccionario de variables y un bucle, en lugar de tres variables sueltas.
+
+    La solución crea `var_interes_deportes`, `var_interes_musica`... y repite
+    el mismo código para cada una. Con un diccionario `{nombre: BooleanVar}`,
+    agregar un interés es agregar una palabra a la lista.
+    Cuándo conviene: cuando las opciones son varias o pueden cambiar.
+    """
+    raiz = tk.Tk()
+    intereses = ["Deportes", "Música", "Lectura", "Cine"]
+    variables = {nombre: tk.BooleanVar(master=raiz) for nombre in intereses}
+
+    for nombre, variable in variables.items():
+        tk.Checkbutton(raiz, text=nombre, variable=variable).pack(anchor="w")
+
+    def mostrar():
+        marcados = [nombre for nombre, variable in variables.items() if variable.get()]
+        print("Intereses:", ", ".join(marcados) if marcados else "ninguno")
+
+    tk.Button(raiz, text="Registrar", command=mostrar).pack(pady=5)
+    raiz.mainloop()
+
+
+def alternativa_2():
+    """`ttk.Combobox` (lista desplegable) en lugar de varios `Radiobutton`.
+
+    Con pocas opciones, los radiobuttons dejan todas visibles. Con muchas
+    (países, comunas), una lista desplegable ocupa menos espacio.
+    `state="readonly"` impide escribir un valor que no esté en la lista.
+    Cuándo conviene: más de 4 o 5 opciones excluyentes.
+    """
+    from tkinter import ttk
+
+    raiz = tk.Tk()
+    genero = tk.StringVar(master=raiz, value="No especificado")
+    ttk.Combobox(raiz, textvariable=genero, state="readonly",
+                 values=["Masculino", "Femenino", "Otro", "No especificado"]).pack(padx=10, pady=10)
+    tk.Button(raiz, text="Registrar", command=lambda: print("Género:", genero.get())).pack(pady=5)
+    raiz.mainloop()
+
+
+def alternativa_3():
+    """El formulario como clase, sin variables globales.
+
+    `obtener_datos` devuelve un diccionario: separar «leer el formulario» de
+    «qué hacer con los datos» permite guardarlos en un archivo, enviarlos o
+    probarlos sin tocar la interfaz.
+    Cuándo conviene: cuando los datos se usan en otro lugar además de imprimirlos.
+    """
+    class Formulario(tk.Frame):
+        def __init__(self, padre):
+            super().__init__(padre, padx=10, pady=10)
+            self.nombre = tk.StringVar(master=padre)
+            self.deportes = tk.BooleanVar(master=padre)
+            tk.Label(self, text="Nombre:").grid(row=0, column=0, sticky="w")
+            tk.Entry(self, textvariable=self.nombre).grid(row=0, column=1)
+            tk.Checkbutton(self, text="Deportes", variable=self.deportes).grid(row=1, column=0, columnspan=2, sticky="w")
+            tk.Button(self, text="Registrar", command=lambda: print(self.obtener_datos())).grid(row=2, column=0, columnspan=2)
+
+        def obtener_datos(self):
+            return {"nombre": self.nombre.get().strip(), "deportes": self.deportes.get()}
+
+    raiz = tk.Tk()
+    Formulario(raiz).pack()
+    raiz.mainloop()
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

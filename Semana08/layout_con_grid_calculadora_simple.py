@@ -31,21 +31,33 @@ Crearemos una interfaz muy simple para una calculadora que solo sume dos número
     d.  Manejar posibles `ValueError` si la entrada no es numérica.
 5.  Asocia `realizar_suma()` al `command` del botón "Sumar".
 6.  Inicia el `mainloop`.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: ordenar widgets en una cuadrícula de filas y columnas con `grid()`,
+y leer/convertir datos de `Entry` con manejo de errores.
+
+Al ejecutar se abre una ventana de 300x200 con dos cajas de texto, el botón
+«Sumar» (que ocupa todo el ancho) y el resultado, que parte en «0.00»:
+  - con 2 y 3.5 el resultado pasa a «5.50»;
+  - con una caja vacía aparece el aviso «Por favor, ingresa ambos números.»;
+  - con texto (ej.: «abc»), aparece el error «Por favor, ingresa solo números
+    válidos.» y el resultado muestra «Error».
+Observa que los decimales deben ir con PUNTO (3.5): «3,5» da error. La
+alternativa 3 del final muestra cómo aceptar también la coma.
+
 -------------------------------------------------------------------------------
 """
 import tkinter as tk
 from tkinter import messagebox  # Para mostrar errores de forma más visual
 
-# Variables para los widgets que necesitamos referenciar
-entry_num1 = None
-entry_num2 = None
-label_resultado_valor = None
-
+# Los widgets 'entry_num1', 'entry_num2' y 'label_resultado_valor' se crean más abajo, a
+# nivel de módulo. La función puede leerlos sin 'global' porque solo se ejecuta cuando
+# el usuario presiona el botón, momento en que ya existen. (Para evitar variables
+# globales, mira las alternativas del final.)
 
 def realizar_suma():
     """Obtiene los números de los Entry, los suma y muestra el resultado."""
-    global entry_num1, entry_num2, label_resultado_valor
-
     try:
         num1_str = entry_num1.get()
         num2_str = entry_num2.get()
@@ -82,17 +94,15 @@ raiz.configure(padx=10, pady=10)
 label_num1 = tk.Label(raiz, text="Primer número:")
 label_num1.grid(row=0, column=0, padx=5, pady=5, sticky="w")  # sticky="w" (west) para alinear a la izquierda
 
-entry_num1_ref = tk.Entry(raiz, width=15)
-entry_num1_ref.grid(row=0, column=1, padx=5, pady=5)
-globals()['entry_num1'] = entry_num1_ref
+entry_num1 = tk.Entry(raiz, width=15)
+entry_num1.grid(row=0, column=1, padx=5, pady=5)
 
 # Fila 1
 label_num2 = tk.Label(raiz, text="Segundo número:")
 label_num2.grid(row=1, column=0, padx=5, pady=5, sticky="w")
 
-entry_num2_ref = tk.Entry(raiz, width=15)
-entry_num2_ref.grid(row=1, column=1, padx=5, pady=5)
-globals()['entry_num2'] = entry_num2_ref
+entry_num2 = tk.Entry(raiz, width=15)
+entry_num2.grid(row=1, column=1, padx=5, pady=5)
 
 # Fila 2
 boton_sumar = tk.Button(raiz, text="Sumar", command=realizar_suma, width=10)
@@ -104,10 +114,9 @@ boton_sumar.grid(row=2, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
 label_resultado_texto = tk.Label(raiz, text="Resultado:")
 label_resultado_texto.grid(row=3, column=0, padx=5, pady=5, sticky="w")
 
-label_resultado_valor_ref = tk.Label(raiz, text="0.00", width=15, relief="sunken",
-                                     anchor="e")  # anchor="e" (east) para alinear texto a la derecha
-label_resultado_valor_ref.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
-globals()['label_resultado_valor'] = label_resultado_valor_ref
+label_resultado_valor = tk.Label(raiz, text="0.00", width=15, relief="sunken",
+                                 anchor="e")  # anchor="e" (east) para alinear texto a la derecha
+label_resultado_valor.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
 
 # Configurar pesos de las columnas para que el Entry se expanda si la ventana se redimensiona
 # La columna 1 (donde están los Entry) se expandirá
@@ -134,3 +143,104 @@ print("Calculadora cerrada.")
     realice la resta de los dos números, mostrando el resultado en la misma etiqueta?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+def alternativa_1():
+    """Mismo diseño con `pack()` y un `Frame` por fila.
+
+    `pack` no tiene filas ni columnas: para alinear «etiqueta + caja» lado a
+    lado hay que agrupar cada par en un `Frame` y empaquetar con `side="left"`.
+    Cuándo conviene: pack, para barras de botones o columnas simples apiladas;
+    grid, para cualquier cosa que deba alinearse en columnas (formularios,
+    calculadoras, tablas). No se pueden mezclar `pack` y `grid` en el MISMO
+    contenedor (Tkinter se queda trabado), pero sí en contenedores distintos.
+    """
+    raiz = tk.Tk()
+    raiz.title("Suma con pack()")
+    entradas = []
+    for texto in ("Primer número:", "Segundo número:"):
+        fila = tk.Frame(raiz)
+        fila.pack(fill="x", padx=10, pady=5)
+        tk.Label(fila, text=texto, width=15, anchor="w").pack(side="left")
+        entrada = tk.Entry(fila, width=15)
+        entrada.pack(side="left")
+        entradas.append(entrada)
+
+    resultado = tk.Label(raiz, text="0.00", relief="sunken")
+
+    def sumar():
+        try:
+            resultado.config(text=f"{float(entradas[0].get()) + float(entradas[1].get()):.2f}")
+        except ValueError:
+            resultado.config(text="Error")
+
+    tk.Button(raiz, text="Sumar", command=sumar).pack(fill="x", padx=10, pady=10)
+    resultado.pack(fill="x", padx=10, pady=5)
+    raiz.mainloop()
+
+
+def alternativa_2():
+    """La calculadora como clase, con una tabla de operaciones.
+
+    Los widgets son atributos (`self.entrada1`...), sin variables globales,
+    y las operaciones viven en un diccionario: agregar «Restar» o «Multiplicar»
+    es agregar una línea (pregunta 5 de las preguntas de comprensión).
+    Cuándo conviene: cuando la calculadora crece (más operaciones, historial).
+    """
+    import operator
+
+    class Calculadora(tk.Tk):
+        OPERACIONES = {"Sumar": operator.add, "Restar": operator.sub, "Multiplicar": operator.mul}
+
+        def __init__(self):
+            super().__init__()
+            self.title("Calculadora con clase")
+            self.entrada1 = tk.Entry(self, width=15)
+            self.entrada2 = tk.Entry(self, width=15)
+            self.resultado = tk.Label(self, text="0.00", relief="sunken", width=15, anchor="e")
+            tk.Label(self, text="Primer número:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+            self.entrada1.grid(row=0, column=1, padx=5)
+            tk.Label(self, text="Segundo número:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+            self.entrada2.grid(row=1, column=1, padx=5)
+            for columna, (nombre, funcion) in enumerate(self.OPERACIONES.items()):
+                tk.Button(self, text=nombre, command=lambda f=funcion: self.calcular(f)).grid(row=2, column=columna, pady=8)
+            tk.Label(self, text="Resultado:").grid(row=3, column=0, sticky="w", padx=5)
+            self.resultado.grid(row=3, column=1, padx=5)
+
+        def calcular(self, operacion):
+            try:
+                valor = operacion(float(self.entrada1.get()), float(self.entrada2.get()))
+                self.resultado.config(text=f"{valor:.2f}")
+            except ValueError:
+                self.resultado.config(text="Error")
+
+    Calculadora().mainloop()
+
+
+def alternativa_3():
+    """Aceptar la coma decimal (3,5) además del punto (3.5).
+
+    En Chile se escribe la coma, pero `float("3,5")` falla. Una función
+    pequeña normaliza el texto antes de convertir; la lógica de errores no cambia.
+    Cuándo conviene: siempre que los usuarios escriban números a mano.
+    """
+    def leer_numero(texto):
+        return float(texto.strip().replace(",", "."))
+
+    for ejemplo in ("3,5", "2.25", " 10 ", "abc"):
+        try:
+            print(f"{ejemplo!r} -> {leer_numero(ejemplo)}")
+        except ValueError:
+            print(f"{ejemplo!r} -> no es un número")
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()
