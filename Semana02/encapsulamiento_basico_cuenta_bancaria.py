@@ -32,6 +32,22 @@ Este ejercicio introduce el concepto de encapsulamiento, utilizando una clase
     `__saldo` desde fuera de la clase (ej: `mi_cuenta.__saldo`). ¿Qué sucede?
 8.  Realiza depósitos y retiros utilizando los métodos. Imprime el saldo
     usando `obtener_saldo()` después de cada operación.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: proteger el saldo para que solo cambie a través de `depositar` y
+`retirar`, que validan cada operación.
+
+Al ejecutar verás:
+  - la cuenta de Ana (saldo 500.00) y la de Luis (se avisa que el saldo inicial
+    negativo se corrigió a 0.00);
+  - un `AttributeError` al intentar leer `cuenta_ana.__saldo` desde fuera (es
+    lo esperado: Python renombra el atributo internamente, «name mangling»);
+  - las operaciones de Ana: depósito de 200 (saldo 700), un depósito inválido,
+    retiro de 100 (saldo 600), un retiro mayor al saldo (rechazado) y un retiro
+    inválido; saldo final 600.00;
+  - un depósito de 150 en la cuenta de Luis, que termina con 150.00.
+
 -------------------------------------------------------------------------------
 """
 
@@ -129,3 +145,85 @@ print(f"Saldo final de Luis: ${cuenta_luis.obtener_saldo():.2f}")
     `depositar` y `retirar`?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+def alternativa_1():
+    """@property de solo lectura con un atributo «protegido» (un guion bajo).
+
+    En Python la privacidad es una convención: `_saldo` significa «no lo toques
+    desde fuera». Con `@property` el saldo se LEE como un atributo normal
+    (`cuenta.saldo`) pero no se puede asignar (`cuenta.saldo = 5` da error).
+    Cuándo conviene: es la forma más habitual en Python; reemplaza a los
+    getters `obtener_*`. Se ve en profundidad en la Semana 6.
+    """
+    class CuentaBancaria:
+        def __init__(self, titular, saldo_inicial=0):
+            self._titular = titular
+            self._saldo = max(float(saldo_inicial), 0.0)
+
+        @property
+        def saldo(self):
+            return self._saldo
+
+        @property
+        def titular(self):
+            return self._titular
+
+        def depositar(self, cantidad):
+            if cantidad > 0:
+                self._saldo += cantidad
+
+    cuenta = CuentaBancaria("Ana Contreras", 500)
+    cuenta.depositar(200)
+    print(cuenta.titular, cuenta.saldo)      # sin paréntesis
+    try:
+        cuenta.saldo = 1_000_000             # no hay setter: no se puede
+    except AttributeError as error:
+        print(f"Error esperado: {error}")
+
+
+def alternativa_2():
+    """Errores con excepciones en vez de mensajes impresos.
+
+    La solución principal imprime «Error: ...» y sigue. Quien llama no se
+    entera de que falló. Con excepciones propias el fallo no puede ignorarse
+    por accidente (adelanto de la Semana 4).
+    Cuándo conviene: cuando la cuenta se usa desde otro código (una ventana,
+    una API) que debe reaccionar al error y no solo mostrarlo por consola.
+    """
+    class FondosInsuficientes(Exception):
+        pass
+
+    class CuentaBancaria:
+        def __init__(self, titular, saldo_inicial=0):
+            self.__titular = titular
+            self.__saldo = float(saldo_inicial)
+
+        def retirar(self, cantidad):
+            if cantidad <= 0:
+                raise ValueError("La cantidad a retirar debe ser positiva.")
+            if cantidad > self.__saldo:
+                raise FondosInsuficientes(f"Saldo {self.__saldo:.2f}, pedido {cantidad:.2f}")
+            self.__saldo -= cantidad
+
+        def obtener_saldo(self):
+            return self.__saldo
+
+    cuenta = CuentaBancaria("Luis Soto", 100)
+    for monto in (30, 500, -5):
+        try:
+            cuenta.retirar(monto)
+            print(f"Retiro de {monto} exitoso. Saldo: {cuenta.obtener_saldo():.2f}")
+        except (ValueError, FondosInsuficientes) as error:
+            print(f"No se pudo retirar {monto}: {error}")
+
+
+# alternativa_1()
+# alternativa_2()
