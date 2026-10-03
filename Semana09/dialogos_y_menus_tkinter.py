@@ -9,7 +9,8 @@ Este ejercicio te mostrará cómo usar diálogos estándar (messagebox) para
 interactuar con el usuario y cómo crear una barra de menú básica en una
 aplicación Tkinter.
 
-1.  Importa `tkinter` y los módulos necesarios de `tkinter.messagebox` y `tkinter.filedialog` (aunque filedialog lo usaremos más en el opcional).
+1.  Importa `tkinter` y `tkinter.messagebox`. (`tkinter.filedialog`, para abrir y
+    guardar archivos, se usa recién en el ejercicio opcional.)
 2.  Crea la ventana raíz.
 3.  Define funciones "comando" para las opciones del menú:
     a.  `mostrar_acerca_de()`: Debe mostrar un diálogo `showinfo` con información
@@ -42,6 +43,20 @@ aplicación Tkinter.
     muestre un diálogo `askquestion` y luego imprima la respuesta ("yes" o "no")
     en la consola.
 8.  Inicia el `mainloop`.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: usar los diálogos estándar de `tkinter.messagebox` para informar y
+preguntar al usuario, y construir una barra de menú con submenús.
+
+Al ejecutar se abre una ventana de 500x300 con la barra «Archivo» / «Ayuda»
+y un botón «Haz una Pregunta»:
+  - Archivo > Abrir Información: avisa que aún no está implementado;
+  - Archivo > Salir: pregunta «¿Estás seguro...?»; solo con «Sí» se cierra;
+  - Ayuda > Acerca de...: muestra los datos de la aplicación;
+  - el botón abre una pregunta sí/no, imprime la respuesta en consola y la comenta.
+Cada diálogo bloquea la ventana principal hasta que lo cierres.
+
 -------------------------------------------------------------------------------
 """
 import tkinter as tk
@@ -139,3 +154,90 @@ print("Aplicación cerrada.")
     método `bind` o la configuración de eventos del menú).
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+def alternativa_1():
+    """Atajo de teclado (Ctrl+Q) y confirmar también al cerrar con la «X».
+
+    `accelerator` solo MUESTRA el texto «Ctrl+Q» en el menú; el atajo real lo
+    crea `bind`. `protocol("WM_DELETE_WINDOW", ...)` intercepta el botón de
+    cerrar de la ventana para que también pida confirmación (en la solución
+    principal, la «X» cerraría sin preguntar).
+    Cuándo conviene: en toda aplicación con datos que se podrían perder.
+    (Esta es la respuesta a la pregunta 5.)
+    """
+    raiz = tk.Tk()
+    raiz.title("Atajos y cierre seguro")
+
+    def salir(evento=None):                       # 'evento' permite usarla en bind() y en command
+        if messagebox.askyesno("Confirmar salida", "¿Estás seguro de que quieres salir?"):
+            raiz.destroy()
+
+    barra = tk.Menu(raiz)
+    raiz.config(menu=barra)
+    menu = tk.Menu(barra, tearoff=0)
+    menu.add_command(label="Salir", accelerator="Ctrl+Q", command=salir)
+    barra.add_cascade(label="Archivo", menu=menu)
+
+    raiz.bind("<Control-q>", salir)
+    raiz.protocol("WM_DELETE_WINDOW", salir)
+    raiz.mainloop()
+
+
+def alternativa_2():
+    """Construir el menú a partir de una estructura de datos.
+
+    En vez de una línea `add_command` por opción, el menú se describe con un
+    diccionario y se arma con un bucle; agregar una opción es agregar una
+    entrada. `None` representa un separador.
+    Cuándo conviene: menús largos o que se generan según el contexto
+    (por ejemplo, la lista de archivos recientes).
+    """
+    raiz = tk.Tk()
+    raiz.title("Menú desde datos")
+    estructura = {
+        "Archivo": [("Abrir Información", lambda: messagebox.showinfo("Info", "Aún no implementado")),
+                    None,
+                    ("Salir", raiz.destroy)],
+        "Ayuda": [("Acerca de...", lambda: messagebox.showinfo("Acerca de", "Mi Aplicación v1.0"))],
+    }
+    barra = tk.Menu(raiz)
+    raiz.config(menu=barra)
+    for titulo, opciones in estructura.items():
+        menu = tk.Menu(barra, tearoff=0)
+        for opcion in opciones:
+            if opcion is None:
+                menu.add_separator()
+            else:
+                texto, accion = opcion
+                menu.add_command(label=texto, command=accion)
+        barra.add_cascade(label=titulo, menu=menu)
+    raiz.mainloop()
+
+
+def alternativa_3():
+    """`askyesno` vs `askquestion` vs `askokcancel`: qué devuelve cada uno.
+
+    - `askyesno`      -> True / False        (el más cómodo en un `if`)
+    - `askquestion`   -> "yes" / "no"        (texto: hay que comparar con ==)
+    - `askokcancel`   -> True / False        (para «Aceptar / Cancelar»)
+    - `askyesnocancel`-> True / False / None (tres respuestas posibles)
+    Cuándo conviene: `askyesno` para decisiones sí/no; `askyesnocancel` cuando
+    «no» y «cancelar» significan cosas distintas (guardar antes de salir).
+    """
+    print("askyesno ->", repr(messagebox.askyesno("Pregunta", "¿Continuar?")))
+    print("askquestion ->", repr(messagebox.askquestion("Pregunta", "¿Continuar?")))
+    print("askokcancel ->", repr(messagebox.askokcancel("Pregunta", "¿Continuar?")))
+    print("askyesnocancel ->", repr(messagebox.askyesnocancel("Pregunta", "¿Guardar antes de salir?")))
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()
