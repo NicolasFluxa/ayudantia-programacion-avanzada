@@ -39,6 +39,24 @@ interfaz gráfica de usuario (GUI) utilizando Tkinter.
         intentos, y rehabilitar los controles si estaban deshabilitados.
 5.  **Estructura:**
     * Organiza la aplicación usando una clase.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: un juego completo con interfaz gráfica que combine todo lo visto:
+una clase con estado (número secreto, intentos), variables de control,
+validación de la entrada, eventos de teclado y widgets que se habilitan o
+deshabilitan.
+
+Al ejecutar se abre una ventana de 400x300. El programa elige un número entre
+1 y 100 (la consola lo muestra «para depuración»: no mires si quieres jugar).
+  - escribe un número y presiona «Adivinar» (o Enter): la etiqueta dice si es
+    muy bajo o muy alto y se actualiza el contador de intentos;
+  - un texto no numérico, o fuera de 1 a 100, muestra un aviso y NO cuenta
+    como intento;
+  - al acertar, se muestra un mensaje con los intentos usados, y la caja y
+    el botón «Adivinar» se deshabilitan;
+  - «Nuevo Juego» reinicia todo con otro número secreto.
+
 -------------------------------------------------------------------------------
 """
 import tkinter as tk
@@ -127,7 +145,9 @@ class JuegoAdivinaNumeroGUI:
             elif intento > self.numero_secreto:
                 self.var_retroalimentacion.set(f"'{intento}' es MUY ALTO. ¡Intenta de nuevo!")
             else:  # ¡Correcto!
-                mensaje_exito = f"¡CORRECTO! 🎉 Adivinaste el número {self.numero_secreto} en {self.intentos_realizados} intentos."
+                palabra = "intento" if self.intentos_realizados == 1 else "intentos"  # concordancia
+                mensaje_exito = (f"¡CORRECTO! Adivinaste el número {self.numero_secreto} "
+                                 f"en {self.intentos_realizados} {palabra}.")
                 self.var_retroalimentacion.set(mensaje_exito)
                 messagebox.showinfo("¡Felicidades!", mensaje_exito)
                 self.entry_intento.config(state=tk.DISABLED)  # Deshabilitar Entry
@@ -171,3 +191,93 @@ if __name__ == "__main__":
     cómo funciona `bind` y qué es `lambda event: ...` en este contexto.
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+import random
+
+
+def alternativa_1():
+    """`Spinbox`: evitar el error en vez de validarlo.
+
+    Un `Spinbox` solo ofrece números de 1 a 100 (con flechas), así que casi no
+    se pueden ingresar valores fuera de rango. Aun así se debe validar si el
+    usuario escribe a mano.
+    Cuándo conviene: cuando el rango es pequeño y conocido; para rangos
+    amplios (1 a 1.000.000) la caja de texto es más práctica.
+    """
+    raiz = tk.Tk()
+    secreto = random.randint(1, 100)
+    caja = tk.Spinbox(raiz, from_=1, to=100, width=6)
+    caja.pack(padx=20, pady=10)
+    mensaje = tk.Label(raiz, text="Adivina un número entre 1 y 100")
+    mensaje.pack(pady=5)
+
+    def probar():
+        try:
+            intento = int(caja.get())
+        except ValueError:
+            mensaje.config(text="Escribe un número entero.")
+            return
+        mensaje.config(text="¡Correcto!" if intento == secreto else "Muy bajo" if intento < secreto else "Muy alto")
+
+    tk.Button(raiz, text="Adivinar", command=probar).pack(pady=5)
+    raiz.mainloop()
+
+
+def alternativa_2():
+    """Validación en vivo con `validatecommand`: solo deja escribir dígitos.
+
+    Tkinter pregunta a la función ANTES de aceptar cada tecla (`%P` es el texto
+    que quedaría). Si devuelve `False`, la tecla se rechaza. Así nunca llega
+    texto inválido a `int()`.
+    Cuándo conviene: campos con formato estricto (números, códigos, RUT).
+    Ojo: para el usuario es menos claro «por qué no me deja escribir» que un
+    mensaje de error; úsalo con una instrucción visible.
+    """
+    raiz = tk.Tk()
+    solo_digitos = (raiz.register(lambda texto_nuevo: texto_nuevo == "" or texto_nuevo.isdigit()), "%P")
+    tk.Entry(raiz, validate="key", validatecommand=solo_digitos, width=10).pack(padx=20, pady=20)
+    raiz.mainloop()
+
+
+def alternativa_3():
+    """Lógica del juego como funciones puras (sin Tkinter).
+
+    `evaluar_intento` se puede probar sin abrir una ventana, y permite hacer
+    algo imposible en la interfaz: dejar que un programa juegue solo con
+    búsqueda binaria. Siempre acierta en 7 intentos o menos (2^7 = 128 > 100).
+    Cuándo conviene: cuando la lógica empieza a tener reglas propias; la
+    interfaz queda como una capa delgada que solo muestra resultados.
+    """
+    def evaluar_intento(intento, secreto):
+        if intento < secreto:
+            return "bajo"
+        if intento > secreto:
+            return "alto"
+        return "correcto"
+
+    secreto = random.randint(1, 100)
+    minimo, maximo, intentos = 1, 100, 0
+    while True:
+        intento = (minimo + maximo) // 2
+        intentos += 1
+        resultado = evaluar_intento(intento, secreto)
+        if resultado == "correcto":
+            break
+        if resultado == "bajo":
+            minimo = intento + 1
+        else:
+            maximo = intento - 1
+    print(f"El número era {secreto}; la búsqueda binaria lo halló en {intentos} intentos.")
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()
