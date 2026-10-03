@@ -22,6 +22,18 @@ Define una clase `Rectangulo` para representar rectángulos.
 
 Crea al menos dos objetos `Rectangulo` con diferentes dimensiones (uno que
 sea un cuadrado y otro que no). Para cada objeto, llama al método `mostrar_info()`.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: practicar una clase con datos validados en el constructor y varios
+métodos que calculan a partir de ellos.
+
+Al ejecutar verás la ficha de tres rectángulos:
+  - 10 x 5: área 50, perímetro 30, «RECTÁNGULO (no cuadrado)»;
+  - 7 x 7: área 49, perímetro 28, «CUADRADO»;
+  - -5 x 0: dos advertencias y se corrige a 1 x 1, que resulta un cuadrado.
+Al final se imprime el área de `rect1` calculada por separado (50).
+
 -------------------------------------------------------------------------------
 """
 
@@ -108,3 +120,96 @@ print(f"\nEl área de rect1 calculada por separado es: {area_rect1}")
     ella y llamar al método `mostrar_info()` para cada rectángulo en la lista?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+from dataclasses import dataclass
+
+
+def alternativa_1():
+    """@property: área y perímetro como atributos calculados.
+
+    Se usan como `rect.area` (sin paréntesis) y siempre están al día si
+    cambias la base o la altura.
+    Cuándo conviene: cuando el valor «se lee» como un dato y no como una acción.
+    Se ve en profundidad en la Semana 6.
+    """
+    class Rectangulo:
+        def __init__(self, base, altura):
+            self.base = base
+            self.altura = altura
+
+        @property
+        def area(self):
+            return self.base * self.altura
+
+        @property
+        def perimetro(self):
+            return 2 * (self.base + self.altura)
+
+    r = Rectangulo(10, 5)
+    print(r.area, r.perimetro)
+    r.base = 20                # el área se recalcula sola
+    print(r.area)
+
+
+def alternativa_2():
+    """@dataclass con validación en __post_init__.
+
+    El constructor se genera solo y `__post_init__` corre justo después,
+    donde se hacen las validaciones.
+    Cuándo conviene: cuando la clase es sobre todo datos y quieres menos código.
+    """
+    @dataclass
+    class Rectangulo:
+        base: float
+        altura: float
+
+        def __post_init__(self):
+            if self.base <= 0 or self.altura <= 0:
+                raise ValueError("La base y la altura deben ser positivas.")
+
+        def calcular_area(self):
+            return self.base * self.altura
+
+        def es_cuadrado(self):
+            return self.base == self.altura
+
+    print(Rectangulo(7, 7).es_cuadrado())      # True
+    try:
+        Rectangulo(-5, 0)
+    except ValueError as error:
+        print(f"Error: {error}")
+
+
+def alternativa_3():
+    """Rechazar el dato inválido con una excepción en vez de «arreglarlo».
+
+    La solución principal reemplaza el valor malo por 1 y sigue (en silencio
+    puede ocultar un error). Aquí el constructor se niega a crear un
+    rectángulo imposible, y quien lo usa decide qué hacer.
+    Cuándo conviene: casi siempre en programas reales; corregir datos en
+    silencio produce resultados que nadie esperaba. Es el tema de la Semana 4.
+    """
+    class Rectangulo:
+        def __init__(self, base, altura):
+            if base <= 0 or altura <= 0:
+                raise ValueError(f"Dimensiones inválidas: {base} x {altura}")
+            self.base = base
+            self.altura = altura
+
+    try:
+        Rectangulo(-5, 0)
+    except ValueError as error:
+        print(f"No se pudo crear: {error}")
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()
