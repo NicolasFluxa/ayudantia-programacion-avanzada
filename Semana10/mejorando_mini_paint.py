@@ -5,7 +5,7 @@
 -------------------------------------------------------------------------------
 ## ENUNCIADO:
 ## ----------
-Toma como base el `proyecto_01_mini_paint_basico_tkinter.py` y añadele
+Toma como base el archivo `mini_paint_basico_tkinter.py` y añádele
 al menos dos de las siguientes mejoras:
 
 **Mejora 1: Selector de Grosor de Línea**
@@ -32,6 +32,21 @@ al menos dos de las siguientes mejoras:
 
 Este archivo puede comenzar como una copia del anterior, y luego modificarlo.
 Aquí se presentará una solución que implementa el Selector de Grosor y el Borrador.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: ampliar el Mini Paint sin reescribirlo, agregando funciones a la
+clase existente: grosor ajustable, borrador y elección de color libre.
+
+Al ejecutar verás la misma ventana de dibujo (750x600) con la barra de controles
+dividida en tres recuadros:
+  - «Colores»: cinco botones y «Más...», que abre el selector de color del sistema;
+  - «Grosor»: cuatro opciones (Fino 2, Medio 5, Grueso 10, Muy Grueso 15) que
+    cambian el ancho de los trazos siguientes;
+  - «Herramientas»: «Borrador» (dibuja con el color del fondo) y «Limpiar Canvas».
+Cada cambio se informa en la consola. Elegir un color después del borrador
+vuelve al modo de dibujo.
+
 -------------------------------------------------------------------------------
 """
 import tkinter as tk
@@ -198,3 +213,107 @@ if __name__ == "__main__":
        necesitarías almacenar los trazos o los IDs de los ítems del canvas).
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+def alternativa_1():
+    """`Scale` (deslizador) para el grosor en vez de `Radiobutton`s.
+
+    Permite cualquier valor entre 1 y 20, no solo cuatro fijos, y ocupa menos
+    espacio. Con `variable=` el deslizador actualiza un `IntVar` que se lee con `.get()`.
+    Cuándo conviene: valores continuos o con muchos pasos; los radiobuttons,
+    pocas opciones con nombre («Fino», «Grueso»).
+    """
+    raiz = tk.Tk()
+    lienzo = tk.Canvas(raiz, bg="white", width=400, height=250)
+    grosor = tk.IntVar(master=raiz, value=3)
+    tk.Scale(raiz, from_=1, to=20, orient=tk.HORIZONTAL, label="Grosor:", variable=grosor).pack(fill="x")
+    lienzo.pack()
+    ultima = {"x": None, "y": None}
+
+    def dibujar(evento):
+        if ultima["x"] is not None:
+            lienzo.create_line(ultima["x"], ultima["y"], evento.x, evento.y,
+                               width=grosor.get(), capstyle=tk.ROUND)
+        ultima["x"], ultima["y"] = evento.x, evento.y
+
+    lienzo.bind("<B1-Motion>", dibujar)
+    lienzo.bind("<ButtonRelease-1>", lambda evento: ultima.update(x=None, y=None))
+    raiz.mainloop()
+
+
+def alternativa_2():
+    """Borrador «real»: elimina los trazos que toca en vez de pintar encima.
+
+    La solución principal PINTA con el color de fondo: parece borrar, pero los
+    trazos siguen ahí (si cambias el fondo, reaparecen) y acumula ítems.
+    Aquí `find_overlapping` busca los ítems bajo el cursor y `delete` los quita.
+    Cuándo conviene: cuando el lienzo puede cambiar de fondo o necesitas un
+    dibujo «limpio»; pintar con el fondo es más simple y suficiente si el
+    fondo no cambia y solo quieres corregir.
+    """
+    raiz = tk.Tk()
+    lienzo = tk.Canvas(raiz, bg="white", width=400, height=250)
+    lienzo.pack()
+    modo = tk.StringVar(master=raiz, value="lapiz")
+    tk.Radiobutton(raiz, text="Lápiz", variable=modo, value="lapiz").pack(side="left")
+    tk.Radiobutton(raiz, text="Borrador", variable=modo, value="borrador").pack(side="left")
+    ultima = {"x": None, "y": None}
+
+    def accion(evento):
+        if modo.get() == "borrador":
+            for item in lienzo.find_overlapping(evento.x - 5, evento.y - 5, evento.x + 5, evento.y + 5):
+                lienzo.delete(item)
+        elif ultima["x"] is not None:
+            lienzo.create_line(ultima["x"], ultima["y"], evento.x, evento.y, width=2, capstyle=tk.ROUND)
+        ultima["x"], ultima["y"] = evento.x, evento.y
+
+    lienzo.bind("<B1-Motion>", accion)
+    lienzo.bind("<ButtonRelease-1>", lambda evento: ultima.update(x=None, y=None))
+    raiz.mainloop()
+
+
+def alternativa_3():
+    """Deshacer el último trazo con una etiqueta (`tag`) por trazo.
+
+    Cada trazo recibe una etiqueta única (`trazo1`, `trazo2`...) y una pila
+    recuerda el orden. «Deshacer» elimina todos los segmentos con la
+    etiqueta del último trazo. Es la respuesta a la pregunta 6b.
+    Cuándo conviene: cualquier editor gráfico simple.
+    """
+    raiz = tk.Tk()
+    lienzo = tk.Canvas(raiz, bg="white", width=400, height=250)
+    lienzo.pack()
+    trazos = []                                       # pila: más reciente al final
+    ultima = {"x": None, "y": None}
+
+    def iniciar(evento):
+        trazos.append(f"trazo{len(trazos) + 1}")
+        ultima["x"], ultima["y"] = evento.x, evento.y
+
+    def dibujar(evento):
+        if ultima["x"] is not None:
+            lienzo.create_line(ultima["x"], ultima["y"], evento.x, evento.y,
+                               width=2, capstyle=tk.ROUND, tags=trazos[-1])
+            ultima["x"], ultima["y"] = evento.x, evento.y
+
+    def deshacer():
+        if trazos:
+            lienzo.delete(trazos.pop())               # borra todos los segmentos de ese trazo
+
+    lienzo.bind("<Button-1>", iniciar)
+    lienzo.bind("<B1-Motion>", dibujar)
+    lienzo.bind("<ButtonRelease-1>", lambda evento: ultima.update(x=None, y=None))
+    tk.Button(raiz, text="Deshacer", command=deshacer).pack()
+    raiz.mainloop()
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

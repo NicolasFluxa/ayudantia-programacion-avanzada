@@ -13,9 +13,10 @@ puede ser tratado polimórficamente.
 1.  Define tres clases diferentes que NO tengan una relación de herencia común:
     `Pato`, `Persona`, `RobotParlante`.
 2.  Cada una de estas clases debe implementar un método llamado `comunicarse()`:
-    a.  El `Pato` debe imprimir "¡Cuac cuac!".
+    a.  El `Pato` (con un `nombre` en su `__init__`) debe imprimir
+        "[nombre] (Pato) dice: ¡Cuac cuac!".
     b.  La `Persona` (con un `nombre` en su `__init__`) debe imprimir
-        "[nombre] dice: ¡Hola!".
+        "[nombre] (Persona) dice: ¡Hola!".
     c.  El `RobotParlante` (con un `id_robot` en su `__init__`) debe imprimir
         "Robot [id_robot]: Saludos, humano."
 3.  Define una función llamada `iniciar_conversacion(ser_comunicante)`:
@@ -27,6 +28,18 @@ puede ser tratado polimórficamente.
 6.  (Opcional) Crea otra clase, `Perro`, con un método `ladrar()` pero SIN el
     método `comunicarse()`. Intenta pasar un objeto `Perro` a
     `iniciar_conversacion()`. ¿Qué sucede?
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: comprobar que `iniciar_conversacion` funciona con cualquier objeto
+que tenga el método `comunicarse()`, sin importar de qué clase sea ni si
+comparte un ancestro con los demás.
+
+Al ejecutar verás tres conversaciones exitosas («Donald (Pato) dice: ¡Cuac
+cuac!», «Ana (Persona) dice: ¡Hola!» y «Robot R2-D2: Saludos, humano.») y una
+cuarta que falla con un mensaje de error controlado, porque `Perro` solo sabe
+`ladrar()`.
+
 -------------------------------------------------------------------------------
 """
 
@@ -105,3 +118,94 @@ iniciar_conversacion(perro_bobby)
     método `comunicarse()` y pasarla a `iniciar_conversacion`? ¿Funcionaría?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+from abc import ABC, abstractmethod
+from typing import Protocol, runtime_checkable
+
+
+class _Pato:
+    def comunicarse(self):
+        print("¡Cuac cuac!")
+
+
+class _Perro:
+    def ladrar(self):
+        print("¡Guau!")
+
+
+def alternativa_1():
+    """Comprobar ANTES de llamar (`hasattr`) en vez de capturar el error.
+
+    La solución principal usa «es más fácil pedir perdón que permiso» (EAFP):
+    intenta y captura `AttributeError`. Esta usa «mirar antes de saltar» (LBYL).
+    Cuándo conviene: LBYL si quieres un mensaje claro sin ejecutar nada a
+    medias; EAFP (la principal) suele ser más pythónica y evita comprobar de más.
+    Cuidado: con EAFP un `AttributeError` ocurrido DENTRO de `comunicarse()`
+    también quedaría capturado y se confundiría con «no sabe comunicarse».
+    """
+    def iniciar_conversacion(ser):
+        if callable(getattr(ser, "comunicarse", None)):
+            ser.comunicarse()
+        else:
+            print(f"'{type(ser).__name__}' no sabe comunicarse.")
+
+    iniciar_conversacion(_Pato())
+    iniciar_conversacion(_Perro())
+
+
+def alternativa_2():
+    """Contrato formal con una clase base abstracta (herencia).
+
+    Aquí SÍ hay un ancestro común: quien no implemente `comunicarse()` ni
+    siquiera puede instanciarse.
+    Cuándo conviene: cuando varias personas escriben las clases y quieres que
+    el error aparezca al crear el objeto y no en medio del programa.
+    """
+    class Comunicante(ABC):
+        @abstractmethod
+        def comunicarse(self):
+            ...
+
+    class Pato(Comunicante):
+        def comunicarse(self):
+            print("¡Cuac cuac!")
+
+    class Perro(Comunicante):
+        def ladrar(self):
+            print("¡Guau!")
+
+    Pato().comunicarse()
+    try:
+        Perro()
+    except TypeError as error:
+        print(f"Error esperado: {error}")
+
+
+def alternativa_3():
+    """`typing.Protocol`: duck typing con el contrato escrito.
+
+    Las clases NO heredan de nada. `@runtime_checkable` permite preguntar con
+    `isinstance` si un objeto cumple el protocolo (solo mira que existan los
+    métodos, no que hagan lo correcto). Además los verificadores de tipos
+    (mypy, el editor) detectan el incumplimiento sin ejecutar el programa.
+    Cuándo conviene: quieres duck typing y a la vez documentar/verificar el contrato.
+    """
+    @runtime_checkable
+    class Comunicante(Protocol):
+        def comunicarse(self) -> None: ...
+
+    print(isinstance(_Pato(), Comunicante))     # True: sin heredar de nada
+    print(isinstance(_Perro(), Comunicante))    # False
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

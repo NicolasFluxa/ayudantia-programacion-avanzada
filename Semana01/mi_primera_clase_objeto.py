@@ -26,6 +26,17 @@ Crearemos una clase simple para representar un tipo de objeto.
 7.  Imprime el nombre y el tipo de `mascota2`.
 8.  Imprime el tipo de la variable `mascota1` y el tipo de `mascota2` usando la
     función `type()`. ¿Qué observas?
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: entender la diferencia entre la clase (el molde) y los objetos
+(las piezas hechas con ese molde), y ver que cada objeto guarda sus propios datos.
+
+Al ejecutar verás, en orden:
+  - la información de `mascota1` (Fido, Perro) y la de `mascota2` (Mishi, Gato);
+  - el resultado de `type()` para ambas: las dos son de la MISMA clase,
+    `MascotaSimple`, aunque tengan datos distintos.
+
 -------------------------------------------------------------------------------
 """
 
@@ -83,3 +94,66 @@ print(f"El tipo de la variable 'mascota2' es: {type(mascota2)}")
     automáticamente los atributos `nombre` o `tipo`? ¿Por qué?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+from types import SimpleNamespace
+from dataclasses import dataclass
+
+
+def alternativa_1():
+    """Sin definir clase: SimpleNamespace.
+
+    Es un objeto vacío al que se le pueden agregar atributos, igual que
+    `MascotaSimple` con `pass`, pero ya viene incluido en la biblioteca estándar.
+    Cuándo conviene: para un dato suelto y rápido, cuando no necesitas métodos.
+    """
+    mascota1 = SimpleNamespace(nombre="Fido", tipo="Perro")
+    mascota2 = SimpleNamespace()
+    mascota2.nombre = "Mishi"      # también se pueden agregar después
+    mascota2.tipo = "Gato"
+    print(f"{mascota1.nombre} es {mascota1.tipo}; {mascota2.nombre} es {mascota2.tipo}")
+    print(type(mascota1))
+
+
+def alternativa_2():
+    """Con un diccionario.
+
+    Parece lo mismo, pero NO es un objeto: se accede con ["clave"] y no hay
+    una clase detrás que dé un tipo propio. Sirve para ver la diferencia.
+    Cuándo conviene: datos que vienen de un archivo o JSON, sin comportamiento propio.
+    """
+    mascota1 = {"nombre": "Fido", "tipo": "Perro"}
+    mascota2 = {"nombre": "Mishi", "tipo": "Gato"}
+    print(f"{mascota1['nombre']} es {mascota1['tipo']}; {mascota2['nombre']} es {mascota2['tipo']}")
+    print(type(mascota1))          # <class 'dict'>: ambas son simples diccionarios
+
+
+def alternativa_3():
+    """Con @dataclass: los atributos se declaran UNA vez, en la clase.
+
+    Evita el problema de la pregunta 2 (olvidar un atributo): si falta uno,
+    Python avisa al crear el objeto. Además genera un __repr__ legible.
+    Cuándo conviene: cuando la clase es básicamente un contenedor de datos.
+    """
+    @dataclass
+    class Mascota:
+        nombre: str
+        tipo: str
+
+    mascota1 = Mascota("Fido", "Perro")
+    mascota2 = Mascota(nombre="Mishi", tipo="Gato")
+    print(mascota1)                # Mascota(nombre='Fido', tipo='Perro')
+    print(mascota2)
+    print(type(mascota1) is type(mascota2))   # True: misma clase
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

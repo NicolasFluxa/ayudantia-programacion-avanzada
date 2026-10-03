@@ -25,17 +25,30 @@ practicando la herencia y la especialización de métodos y atributos.
         luego inicializar `self.numero_puertas`.
     b.  Sobrescribe `descripcion_general(self)` para añadir el número de puertas
         a la descripción retornada por la superclase.
-    c.  Añade un método `tocar_bocina(self)` que imprima "¡Pip Pip!".
+    c.  Añade un método `tocar_bocina(self)` que imprima "[Marca Modelo] dice: ¡Pip Pip!".
 
 3.  Define una clase `Motocicleta` que herede de `Vehiculo`:
     a.  Constructor `__init__(self, marca, modelo, anio_fabricacion, tipo_cadena)`:
         Debe usar `super()` e inicializar `self.tipo_cadena` (ej: "Estándar", "Reforzada").
     b.  Sobrescribe `descripcion_general(self)` para añadir el tipo de cadena.
-    c.  Añade un método `hacer_ caballito(self)` que imprima
-        "[Marca Modelo] está haciendo un caballito! (¡Con cuidado!)".
+    c.  Añade un método `hacer_caballito(self)` que imprima
+        "¡[Marca Modelo] está haciendo un caballito! (¡Con cuidado!)", pero
+        solo si la moto está encendida (si no, avisa que no puede hacerlo).
 
 4.  Crea instancias de `Coche` y `Motocicleta`. Prueba todos sus métodos:
     `arrancar`, `apagar`, `descripcion_general`, y los métodos específicos.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: armar una jerarquía de dos niveles (`Vehiculo` -> `Coche` y
+`Motocicleta`) donde las subclases reutilizan el constructor y los métodos de
+la base, y amplían la descripción con `super()`.
+
+Al ejecutar verás para el coche y para la moto: la descripción general
+(marca, modelo, año y el dato propio: puertas o tipo de cadena), cómo arrancar
+y apagar cambian el estado (y avisan si ya estaba en ese estado), la bocina del
+coche, y el caballito de la moto, que solo funciona con la moto encendida.
+
 -------------------------------------------------------------------------------
 """
 
@@ -137,3 +150,99 @@ mi_moto.hacer_caballito() # Intentar sin estar encendida
     ejecuta cuando se llama desde un objeto de la subclase?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+from dataclasses import dataclass, field
+
+
+def alternativa_1():
+    """Composición: el coche TIENE un motor, en vez de heredar el encendido.
+
+    El estado «encendido» y sus métodos viven en una clase `Motor`; `Coche` y
+    `Motocicleta` la usan sin repetirla ni heredar de un `Vehiculo` común.
+    Cuándo conviene: cuando una pieza se comparte entre cosas que no son del
+    mismo tipo (una lancha y un generador también tienen motor).
+    """
+    class Motor:
+        def __init__(self):
+            self.encendido = False
+
+        def arrancar(self):
+            self.encendido = True
+            print("Motor en marcha.")
+
+        def apagar(self):
+            self.encendido = False
+            print("Motor apagado.")
+
+    class Coche:
+        def __init__(self, marca, modelo, puertas):
+            self.marca = marca
+            self.modelo = modelo
+            self.puertas = puertas
+            self.motor = Motor()                   # composición
+
+    coche = Coche("Toyota", "Corolla", 4)
+    coche.motor.arrancar()
+    coche.motor.apagar()
+
+
+def alternativa_2():
+    """Herencia con @dataclass: menos código de constructor.
+
+    `field(init=False)` deja `encendido` fuera del constructor (siempre parte
+    en False). Cada subclase solo declara sus campos nuevos.
+    Cuándo conviene: jerarquías que son sobre todo datos.
+    """
+    @dataclass
+    class Vehiculo:
+        marca: str
+        modelo: str
+        anio_fabricacion: int
+        encendido: bool = field(default=False, init=False)
+
+        def descripcion_general(self):
+            return f"{self.marca} {self.modelo}, Año: {self.anio_fabricacion}"
+
+    @dataclass
+    class Coche(Vehiculo):
+        numero_puertas: int = 4
+
+        def descripcion_general(self):
+            return f"{super().descripcion_general()}, Puertas: {self.numero_puertas}"
+
+    print(Coche("Toyota", "Corolla", 2022, 4).descripcion_general())
+
+
+def alternativa_3():
+    """Mixin: una capacidad suelta que se «mezcla» en las clases que la necesitan.
+
+    La bocina no es de todos los vehículos (la moto de la solución no la tiene),
+    así que se separa en una clase pequeña y se agrega por herencia múltiple.
+    Cuándo conviene: una habilidad compartida por clases que no son hermanas.
+    """
+    class ConBocina:
+        def tocar_bocina(self):
+            print(f"{self.marca} {self.modelo} dice: ¡Pip Pip!")
+
+    class Vehiculo:
+        def __init__(self, marca, modelo):
+            self.marca = marca
+            self.modelo = modelo
+
+    class Coche(Vehiculo, ConBocina):
+        pass
+
+    Coche("Toyota", "Corolla").tocar_bocina()
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

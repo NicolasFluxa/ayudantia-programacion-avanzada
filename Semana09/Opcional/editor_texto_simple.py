@@ -42,6 +42,23 @@ y diálogos de archivo.
     * Para insertar texto: `mi_texto.insert(tk.END, "nuevo texto")`.
 * `tkinter.filedialog`: `askopenfilename()`, `asksaveasfilename()`.
 * Manejo de errores (`try-except`) para operaciones de archivo es crucial.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: integrar lo aprendido en una aplicación útil: un editor de texto con
+barra de menú, cuadros de diálogo de archivo y manejo de errores, organizado
+en una clase.
+
+Al ejecutar se abre una ventana de 700x500 con un área de texto con barra
+de desplazamiento y los menús «Archivo» (Nuevo, Abrir..., Guardar, Guardar
+Como..., Salir) y «Editar» (Deshacer, Rehacer):
+  - «Abrir...» carga un .txt en el área y muestra su ruta en el título;
+  - «Guardar» escribe en el mismo archivo si ya hay uno y, si no, pide dónde
+    (igual que «Guardar Como...»);
+  - si algo falla (archivo ilegible, sin permisos), aparece un mensaje de
+    error en vez de cerrarse el programa.
+Para probarlo sin riesgo, guarda y abre un archivo nuevo de prueba.
+
 -------------------------------------------------------------------------------
 """
 import tkinter as tk
@@ -176,3 +193,75 @@ if __name__ == "__main__":
     resultado (quizás en un `messagebox` o una etiqueta de estado)?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+from pathlib import Path
+
+
+def alternativa_1():
+    """`Text` + `Scrollbar` armados a mano (en vez de `ScrolledText`).
+
+    `ScrolledText` es un `Text` que ya trae la barra. Hacerlo a mano muestra
+    cómo se conectan: la barra mueve el texto (`command`) y el texto informa
+    a la barra su posición (`yscrollcommand`).
+    Cuándo conviene: cuando necesitas barra horizontal también, o ponerla en
+    otro lugar. Para el caso común, `ScrolledText`.
+    """
+    raiz = tk.Tk()
+    texto = tk.Text(raiz, wrap=tk.WORD, undo=True)
+    barra = tk.Scrollbar(raiz, command=texto.yview)
+    texto.config(yscrollcommand=barra.set)
+    barra.pack(side="right", fill="y")
+    texto.pack(side="left", expand=True, fill="both")
+    raiz.mainloop()
+
+
+def alternativa_2():
+    """`pathlib.Path` para leer y escribir (en vez de `open` + `with`).
+
+    `Path.read_text()` y `write_text()` abren, leen/escriben y cierran en una
+    sola línea. Los errores son los mismos (`OSError`, `UnicodeDecodeError`),
+    así que el `try`/`except` de la solución principal sigue igual.
+    Cuándo conviene: leer o escribir un archivo completo. Con `open` y
+    `with` si lo procesas línea por línea o en trozos.
+    """
+    ruta = Path("ejemplo_editor.txt")
+    ruta.write_text("Hola desde pathlib\nSegunda línea", encoding="utf-8")
+    print(ruta.read_text(encoding="utf-8"))
+    ruta.unlink()                                      # borra el archivo de prueba
+
+
+def alternativa_3():
+    """Avisar si hay cambios sin guardar al cerrar (con `edit_modified`).
+
+    El widget `Text` recuerda si fue modificado desde la última vez que se
+    marcó como «limpio». Así, al cerrar, solo se pregunta si realmente hay
+    algo que perder. (La solución principal pregunta SIEMPRE, y tiene un
+    comentario que sugiere justo esta mejora.)
+    Cuándo conviene: cualquier editor. Después de guardar hay que llamar a
+    `texto.edit_modified(False)` para dejarlo «limpio».
+    """
+    raiz = tk.Tk()
+    texto = tk.Text(raiz)
+    texto.pack(expand=True, fill="both")
+
+    def al_cerrar():
+        if texto.edit_modified() and not messagebox.askyesno(
+                "Cambios sin guardar", "Hay cambios sin guardar. ¿Salir de todos modos?"):
+            return                                     # se queda en la aplicación
+        raiz.destroy()
+
+    raiz.protocol("WM_DELETE_WINDOW", al_cerrar)
+    raiz.mainloop()
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

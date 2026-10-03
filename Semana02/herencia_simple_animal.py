@@ -34,6 +34,18 @@ puede heredar atributos y métodos de otra clase (superclase).
 4.  Crea un objeto de la clase `Perro` y otro de la clase `Gato`.
 5.  Llama a los métodos `comer()`, `hacer_sonido()` y su método específico
     (`jugar()` o `acicalarse()`) para cada objeto.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: reutilizar código común (en `Animal`) y especializar solo lo que
+cambia en cada subclase (`Perro`, `Gato`).
+
+Al ejecutar verás, para Bobby (perro) y Luna (gato): un mensaje de creación
+(primero el de `Animal`, luego el específico), y después `comer()` (heredado,
+igual para todos), `hacer_sonido()` (sobrescrito, distinto en cada uno) y
+`jugar()` o `acicalarse()` (exclusivos de cada subclase). Al final, un `Animal`
+genérico muestra el sonido «genérico» de la clase base.
+
 -------------------------------------------------------------------------------
 """
 
@@ -123,3 +135,96 @@ animal_generico.hacer_sonido()
     `Perro` y `Gato` acceder a ese atributo? (Esto se refiere a atributos de clase).
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+def alternativa_1():
+    """Atributo de clase en lugar de sobrescribir el método.
+
+    Si lo único que cambia es un dato (el sonido), no hace falta redefinir el
+    método en cada subclase: se declara el dato y el método heredado lo usa.
+    Cuándo conviene: cuando las subclases solo difieren en valores, no en lógica.
+    """
+    class Animal:
+        sonido = "un sonido genérico"
+
+        def __init__(self, nombre, edad):
+            self.nombre = nombre
+            self.edad = edad
+
+        def hacer_sonido(self):
+            print(f"{self.nombre} hace: {self.sonido}")
+
+    class Perro(Animal):
+        sonido = "¡Guau Guau!"
+
+    class Gato(Animal):
+        sonido = "¡Miau!"
+
+    for animal in (Perro("Bobby", 5), Gato("Luna", 2), Animal("Criatura", 10)):
+        animal.hacer_sonido()
+
+
+def alternativa_2():
+    """Composición: «tiene un» en lugar de «es un».
+
+    `Perro` no hereda de `Animal`: contiene un `Animal` y le delega lo común.
+    Cuándo conviene: cuando la relación no es de verdad «X es un Y», o cuando
+    quieres cambiar el comportamiento de un objeto sin tocar una jerarquía.
+    Costo: hay que delegar a mano cada método (`comer` aquí).
+    """
+    class Animal:
+        def __init__(self, nombre, edad):
+            self.nombre = nombre
+            self.edad = edad
+
+        def comer(self):
+            print(f"{self.nombre} está comiendo.")
+
+    class Perro:
+        def __init__(self, nombre, edad, raza):
+            self.animal = Animal(nombre, edad)     # composición
+            self.raza = raza
+
+        def comer(self):
+            self.animal.comer()                    # delegación
+
+        def hacer_sonido(self):
+            print(f"{self.animal.nombre} (un perro) hace: ¡Guau Guau!")
+
+    perro = Perro("Bobby", 5, "Golden Retriever")
+    perro.comer()
+    perro.hacer_sonido()
+    print(isinstance(perro, Animal))               # False: ya no «es un» Animal
+
+
+def alternativa_3():
+    """Extender el método de la superclase con super() en vez de reemplazarlo.
+
+    Cuándo conviene: cuando la subclase quiere AGREGAR comportamiento al de la
+    base, no sustituirlo por completo.
+    """
+    class Animal:
+        def __init__(self, nombre):
+            self.nombre = nombre
+
+        def comer(self):
+            print(f"{self.nombre} está comiendo.")
+
+    class Perro(Animal):
+        def comer(self):
+            super().comer()                        # lo de Animal...
+            print(f"{self.nombre} mueve la cola.") # ...y algo más
+
+    Perro("Bobby").comer()
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

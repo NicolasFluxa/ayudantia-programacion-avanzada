@@ -21,6 +21,18 @@ La función debe:
     por el factorial de `n-1`.
 4.  Probar la función con varios números (ej: 0, 1, 5, 7) y también con un
     número negativo para ver la validación.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: resolver un problema definiéndolo en términos de una versión más
+pequeña de sí mismo (n! = n * (n-1)!) hasta llegar a un caso que se responde
+directo (0! = 1! = 1).
+
+Al ejecutar verás los factoriales de 0, 1, 5, 7 y 3 (1, 1, 120, 5040 y 6) y
+después dos mensajes de error controlados: uno para -3 (negativo) y otro para
+3.5 (no es entero). Para trazar las llamadas, descomenta el `print` de
+depuración dentro de la función.
+
 -------------------------------------------------------------------------------
 """
 
@@ -95,3 +107,70 @@ print("-------------------------------------------")
     escribir una versión iterativa de la función factorial?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+import math
+from functools import reduce
+
+
+def alternativa_1():
+    """Versión iterativa (con un bucle).
+
+    Hace lo mismo sin llamadas apiladas, así que no tiene límite de recursión:
+    con n grande la versión recursiva falla con `RecursionError` y esta no.
+    Cuándo conviene: cuando n puede ser grande, o cuando el problema se
+    describe naturalmente como una repetición (no como un problema que
+    contiene un problema más pequeño).
+    """
+    def factorial_iterativo(n):
+        if not isinstance(n, int) or n < 0:
+            raise ValueError("El factorial requiere un entero no negativo.")
+        resultado = 1
+        for i in range(2, n + 1):
+            resultado *= i
+        return resultado
+
+    print(factorial_iterativo(5))                           # 120
+    print(len(str(factorial_iterativo(1500))), "dígitos")   # funciona con n grande
+    try:
+        factorial_recursivo(1500)                           # la recursiva se pasa del límite
+    except RecursionError:
+        print("La versión recursiva excedió el límite de recursión (≈ 1000 llamadas).")
+
+
+def alternativa_2():
+    """`math.factorial`: lo que ya trae la biblioteca estándar.
+
+    Está escrita en C, es rápida y valida la entrada por ti.
+    Cuándo conviene: en código real, siempre que exista una función de la
+    biblioteca estándar que haga lo que necesitas. La versión recursiva es
+    para aprender la técnica.
+    """
+    print(math.factorial(5))                                # 120
+    try:
+        math.factorial(-3)
+    except ValueError as error:
+        print(f"Error: {error}")
+
+
+def alternativa_3():
+    """Producto con `math.prod` o `reduce` (estilo funcional).
+
+    Cuándo conviene: cuando prefieres expresar «multiplica todos estos
+    números» en una línea, sin escribir bucle ni recursión.
+    """
+    n = 5
+    print(math.prod(range(1, n + 1)))                       # 120
+    print(reduce(lambda acumulado, i: acumulado * i, range(1, n + 1), 1))   # 120
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

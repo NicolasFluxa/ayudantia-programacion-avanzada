@@ -22,6 +22,19 @@ y añadir un simple mensaje.
     Usa el método `pack()` del widget Label. Este es el gestor de geometría más simple.
 7.  Inicia el bucle principal de eventos de Tkinter (`mainloop()`). Esto mantiene
     la ventana visible y receptiva a eventos hasta que se cierre.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: conocer las piezas mínimas de toda aplicación Tkinter: la ventana
+raíz, un widget dentro de ella y el bucle de eventos que la mantiene viva.
+
+Al ejecutar se abre una ventana de 400x250 con el título «Mi Primera Ventana
+con Tkinter» y dos etiquetas: «¡Hola, Tkinter! Bienvenido/a.» y «Este es un
+ejemplo básico de GUI con Python.». En la consola aparecen mensajes de
+avance; el último («El bucle principal ha terminado...») solo sale cuando
+cierras la ventana. Si omites `mainloop()`, la ventana se abre y se cierra al
+instante.
+
 -------------------------------------------------------------------------------
 """
 
@@ -77,3 +90,72 @@ print("El bucle principal ha terminado (ventana cerrada).")
     texto de la `Label`? (Investiga las opciones `bg` y `fg`).
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+import tkinter.ttk as ttk
+
+
+def alternativa_1():
+    """La ventana como subclase de `tk.Tk` (en vez de una variable `raiz`).
+
+    La ventana ES la aplicación: los widgets se crean en `__init__` con
+    `self` como padre. Es la base de la organización en clases de la Semana 9.
+    Cuándo conviene: en cuanto el programa tenga más que un par de widgets.
+    """
+    class MiVentana(tk.Tk):
+        def __init__(self):
+            super().__init__()
+            self.title("Mi Primera Ventana con Tkinter")
+            self.geometry("400x250")
+            tk.Label(self, text="¡Hola, Tkinter! Bienvenido/a.", font=("Arial", 16)).pack(pady=20)
+
+    MiVentana().mainloop()
+
+
+def alternativa_2():
+    """Widgets `ttk` (aspecto nativo del sistema) en lugar de los clásicos `tk`.
+
+    `ttk.Label` se parece a `tk.Label`, pero toma los colores y fuentes desde
+    un tema; por eso opciones como `bg` o `fg` no existen, y se usa `style`
+    o `foreground`/`background`. Se importa como `tkinter.ttk`.
+    Cuándo conviene: cuando quieres que la aplicación se vea moderna sin
+    esfuerzo. Los widgets clásicos (`tk`) son más fáciles de personalizar.
+    """
+    raiz = tk.Tk()
+    raiz.title("Ventana con ttk")
+    raiz.geometry("400x250")
+    ttk.Label(raiz, text="¡Hola, Tkinter!", font=("Arial", 16)).pack(pady=20)
+    raiz.mainloop()
+
+
+def alternativa_3():
+    """Centrar la ventana y ubicar con `place` en lugar de `pack`.
+
+    `pack` acomoda los widgets en bloques; `place` los coloca en coordenadas
+    exactas (píxeles o fracciones del tamaño de la ventana). Con
+    `relx=0.5, rely=0.5, anchor="center"` la etiqueta queda al medio aunque
+    se cambie el tamaño de la ventana.
+    Cuándo conviene: `pack` casi siempre; `place` para un elemento flotante
+    (una etiqueta centrada, un botón de cierre en la esquina). La Semana 8
+    presenta `grid`, el más cómodo para formularios.
+    """
+    raiz = tk.Tk()
+    raiz.title("Centrado con place")
+    ancho, alto = 400, 250
+    x = (raiz.winfo_screenwidth() - ancho) // 2
+    y = (raiz.winfo_screenheight() - alto) // 2
+    raiz.geometry(f"{ancho}x{alto}+{x}+{y}")                 # tamaño + posición en pantalla
+    tk.Label(raiz, text="¡Hola, Tkinter!", font=("Arial", 16)).place(relx=0.5, rely=0.5, anchor="center")
+    raiz.mainloop()
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

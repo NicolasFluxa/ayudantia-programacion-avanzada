@@ -39,6 +39,21 @@ instancia ni sobre la clase, son como funciones normales agrupadas en la clase).
     g.  Llama a `Producto.obtener_total_productos()` para ver el contador.
     h.  Crea un producto usando `Producto.crear_producto_oferta()` y verifica sus datos.
         Verifica nuevamente el total de productos.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: distinguir los tres tipos de método según lo que necesitan:
+  - de instancia (`self`): trabajan con los datos de UN objeto;
+  - de clase (`cls`): trabajan con la clase (su contador, o crean objetos);
+  - estáticos (nada): son funciones sueltas que se agrupan en la clase por orden.
+
+Al ejecutar verás:
+  - cuatro pruebas de `es_triangulo_valido` (3,4,5 -> True; 1,2,5 -> False;
+    7,10,5 -> True; 1,1,-1 -> False);
+  - la creación de tres productos y «Total de productos creados: 3»;
+  - un producto en oferta (Monitor Curvo con 15 % de descuento = $255.00) y
+    el total actualizado a 4.
+
 -------------------------------------------------------------------------------
 """
 
@@ -156,3 +171,83 @@ print("------------------------------------------")
     (ej: `mi_objeto.metodo_estatico()`)? ¿Y a un método de clase?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+from dataclasses import dataclass
+from itertools import count
+
+
+def alternativa_1():
+    """Función suelta en el módulo, en lugar de un @staticmethod.
+
+    El método estático no usa `self` ni `cls`, así que es una función normal
+    metida en una clase. En Python se puede dejar suelta, sin la clase.
+    Cuándo conviene: la mayoría de las veces (es más simple de importar y
+    usar). El método estático conviene cuando la utilidad pertenece
+    claramente a una clase y quieres encontrarla ahí (`GeometriaUtils.xxx`).
+    """
+    def es_triangulo_valido(a, b, c):
+        return min(a, b, c) > 0 and a + b > c and a + c > b and b + c > a
+
+    print(es_triangulo_valido(3, 4, 5))                     # True
+    print(es_triangulo_valido(1, 2, 5))                     # False
+
+
+def alternativa_2():
+    """Función fábrica externa en lugar de @classmethod (y por qué pierde).
+
+    Funciona, pero `crear_oferta` está atada a `Producto`. Con una subclase
+    devuelve el tipo equivocado; el `@classmethod` usa `cls` y siempre
+    devuelve la clase desde la que se llamó.
+    Cuándo conviene: la función externa solo si nunca habrá subclases;
+    el `@classmethod` es mejor cuando la clase puede heredarse.
+    """
+    class Producto:
+        def __init__(self, nombre, precio):
+            self.nombre, self.precio = nombre, precio
+
+        @classmethod
+        def oferta_con_classmethod(cls, nombre, precio, descuento):
+            return cls(nombre, precio * (1 - descuento / 100))
+
+    class ProductoPerecible(Producto):
+        pass
+
+    def crear_oferta(nombre, precio, descuento):
+        return Producto(nombre, precio * (1 - descuento / 100))
+
+    print(type(ProductoPerecible.oferta_con_classmethod("Leche", 1000, 10)).__name__)  # ProductoPerecible
+    print(type(crear_oferta("Leche", 1000, 10)).__name__)                               # Producto (¡no es el que querías!)
+
+
+def alternativa_3():
+    """Contador con `itertools.count` y `@dataclass`.
+
+    En vez de un entero que se incrementa a mano, `count()` entrega 1, 2, 3...
+    cada vez que se le pide el siguiente valor; así cada producto recibe además
+    un identificador único.
+    Cuándo conviene: cuando necesitas ids únicos, no solo contar cuántos hay.
+    """
+    @dataclass
+    class Producto:
+        nombre: str
+        precio: float
+        _ids = count(1)                                     # sin anotación: es atributo de CLASE
+
+        def __post_init__(self):
+            self.id = next(Producto._ids)
+
+    p1, p2 = Producto("Laptop Pro", 1200), Producto("Mouse Gamer", 45.5)
+    print(p1.id, p2.id)                                     # 1 2
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

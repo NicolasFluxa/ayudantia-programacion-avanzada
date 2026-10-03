@@ -27,6 +27,19 @@ constructor para inicializar sus atributos y métodos para definir su comportami
 6.  Llama al método `presentarse()` para cada uno de tus objetos mascota.
 7.  Llama al método `hacer_sonido()` para cada mascota, pasándole un sonido
     apropiado (ej: "Guau", "Miau").
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: que cada objeto nazca ya con sus datos (gracias a `__init__`) y que
+tenga comportamientos propios (métodos) que usan esos datos mediante `self`.
+
+Al ejecutar verás, en orden:
+  - un mensaje de creación por cada mascota (Rocky, Pelusa y Piolín);
+  - la presentación de cada una: «¡Hola! Soy Rocky, un Labrador de 3 año(s).»;
+  - el sonido de cada una: «Rocky hace: ¡Guau Guau!».
+(El programa crea una tercera mascota, Piolín, de regalo, para que veas que la
+misma clase sirve para tantos objetos como necesites.)
+
 -------------------------------------------------------------------------------
 """
 
@@ -98,3 +111,65 @@ pajaro1.hacer_sonido("Pío Pío")
     incremente la edad de la mascota en 1 y muestre un mensaje. Pruébalo.
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+from dataclasses import dataclass
+
+
+def alternativa_1():
+    """@dataclass: el constructor se genera solo.
+
+    Declaras los campos y Python escribe `__init__` y `__repr__` por ti.
+    Cuándo conviene: clases cuyo trabajo principal es guardar datos; ahorra
+    código repetitivo y errores de tipeo en `self.x = x`.
+    """
+    @dataclass
+    class Mascota:
+        nombre: str
+        tipo: str
+        edad: int
+
+        def presentarse(self):
+            print(f"¡Hola! Soy {self.nombre}, un {self.tipo} de {self.edad} año(s).")
+
+        def hacer_sonido(self, sonido):
+            print(f"{self.nombre} hace: ¡{sonido}!")
+
+    rocky = Mascota("Rocky", "Labrador", 3)
+    rocky.presentarse()
+    rocky.hacer_sonido("Guau")
+    print(rocky)   # el __repr__ automático: Mascota(nombre='Rocky', tipo='Labrador', edad=3)
+
+
+def alternativa_2():
+    """__str__ en lugar de un método que imprime.
+
+    En vez de `presentarse()` (que imprime), el objeto sabe convertirse en
+    texto y quien lo usa decide qué hacer con él: imprimirlo, guardarlo, etc.
+    Cuándo conviene: cuando quieres reutilizar el texto (en un archivo, en una
+    ventana) y no solo mostrarlo por consola.
+    """
+    class Mascota:
+        def __init__(self, nombre, tipo, edad):
+            self.nombre = nombre
+            self.tipo = tipo
+            self.edad = edad
+
+        def __str__(self):
+            return f"¡Hola! Soy {self.nombre}, un {self.tipo} de {self.edad} año(s)."
+
+    gato = Mascota("Pelusa", "Siamés", 5)
+    print(gato)              # print llama a __str__ automáticamente
+    texto = str(gato)        # también se puede guardar como texto
+    print(len(texto))
+
+
+# alternativa_1()
+# alternativa_2()

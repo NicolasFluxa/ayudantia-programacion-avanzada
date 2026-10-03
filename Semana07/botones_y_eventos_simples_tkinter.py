@@ -30,13 +30,21 @@ realicen una acción cuando se presionan (manejo de eventos).
     Una forma simple es hacer la etiqueta una variable global o pasarla a la función
     si la defines de forma que pueda aceptarla (más avanzado con lambdas o clases).
     Para este ejercicio, intentemos cambiar su texto usando el método `config` o `configure`.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: conectar un evento (el clic) con una función, y que esa función
+modifique la interfaz.
+
+Al ejecutar se abre una ventana de 350x200 con una etiqueta («Presiona el
+botón de abajo.»), el botón «Haz Clic Aquí» y el botón «Salir»:
+  - cada clic en «Haz Clic Aquí» imprime «¡El botón fue presionado!» en la
+    consola y cambia la etiqueta a «¡Gracias por presionar el botón!» en verde;
+  - «Salir» cierra la ventana y el programa imprime «Aplicación cerrada.».
+
 -------------------------------------------------------------------------------
 """
 import tkinter as tk
-
-# Variable global para la etiqueta, para poder modificarla desde la función
-# (No es la mejor práctica para apps grandes, pero simple para este ejemplo)
-etiqueta_estado = None
 
 # 2. Definir la función que se ejecutará al presionar el botón
 def accion_boton():
@@ -44,9 +52,12 @@ def accion_boton():
     mensaje_consola = "¡El botón fue presionado!"
     print(mensaje_consola) # Imprime en la consola
 
-    # 7. (Extensión) Cambiar el texto de la etiqueta
-    if etiqueta_estado: # Verificar que la etiqueta exista
-        etiqueta_estado.config(text="¡Gracias por presionar el botón! 👍", fg="green")
+    # 7. (Extensión) Cambiar el texto de la etiqueta.
+    # 'etiqueta_estado' se crea más abajo, a nivel de módulo; la función la encuentra
+    # porque se ejecuta después, cuando el usuario presiona el botón.
+    # (Usar variables globales es simple para este ejemplo, pero no es lo mejor en
+    # apps grandes: mira las alternativas del final.)
+    etiqueta_estado.config(text="¡Gracias por presionar el botón!", fg="green")
 
 # 1. Crear la ventana raíz
 raiz = tk.Tk()
@@ -54,12 +65,8 @@ raiz.title("Botones y Eventos")
 raiz.geometry("350x200")
 
 # 3. Crear una Label inicial
-# Hacemos 'etiqueta_estado' global para que la función accion_boton pueda accederla
-etiqueta_estado_global_ref = tk.Label(raiz, text="Presiona el botón de abajo.", font=("Arial", 14))
-etiqueta_estado_global_ref.pack(pady=20)
-# Asignamos la referencia de la etiqueta a la variable global
-# (esta es una forma de hacerlo, hay otras más estructuradas)
-globals()['etiqueta_estado'] = etiqueta_estado_global_ref
+etiqueta_estado = tk.Label(raiz, text="Presiona el botón de abajo.", font=("Arial", 14))
+etiqueta_estado.pack(pady=20)
 
 
 # 4. Crear un widget Button
@@ -102,3 +109,72 @@ print("Aplicación cerrada.")
     otro mensaje o cambie el texto de la etiqueta a algo distinto)?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+from functools import partial
+
+
+def alternativa_1():
+    """Sin variable global: `partial` (o `lambda`) pasa la etiqueta a la función.
+
+    Cuándo conviene: la función necesita datos del entorno y quieres que sea
+    reutilizable y fácil de probar. Si la acción es de una sola línea, una
+    `lambda` basta: `command=lambda: etiqueta.config(text="¡Hola!")`.
+    """
+    def accion(etiqueta):
+        print("¡El botón fue presionado!")
+        etiqueta.config(text="¡Gracias por presionar el botón!", fg="green")
+
+    raiz = tk.Tk()
+    etiqueta = tk.Label(raiz, text="Presiona el botón de abajo.", font=("Arial", 14))
+    etiqueta.pack(pady=20)
+    tk.Button(raiz, text="Haz Clic Aquí", command=partial(accion, etiqueta)).pack(pady=10)
+    raiz.mainloop()
+
+
+def alternativa_2():
+    """`StringVar`: la etiqueta muestra el valor de una variable de control.
+
+    En vez de llamar a `etiqueta.config(text=...)`, se cambia la variable con
+    `.set()` y todos los widgets que la usan se actualizan solos. Se ve en la
+    Semana 8.
+    Cuándo conviene: cuando varios widgets muestran o editan el mismo dato.
+    """
+    raiz = tk.Tk()
+    mensaje = tk.StringVar(master=raiz, value="Presiona el botón de abajo.")
+    tk.Label(raiz, textvariable=mensaje, font=("Arial", 14)).pack(pady=20)
+    tk.Button(raiz, text="Haz Clic Aquí",
+              command=lambda: mensaje.set("¡Gracias por presionar el botón!")).pack(pady=10)
+    raiz.mainloop()
+
+
+def alternativa_3():
+    """La ventana como clase: la etiqueta es un atributo y el botón llama a un método.
+
+    Cuándo conviene: es la forma estándar de organizar aplicaciones que
+    crecen; evita los globales sin pasar argumentos a mano (Semana 9).
+    """
+    class Aplicacion(tk.Tk):
+        def __init__(self):
+            super().__init__()
+            self.etiqueta = tk.Label(self, text="Presiona el botón de abajo.", font=("Arial", 14))
+            self.etiqueta.pack(pady=20)
+            tk.Button(self, text="Haz Clic Aquí", command=self.al_presionar).pack(pady=10)
+
+        def al_presionar(self):
+            print("¡El botón fue presionado!")
+            self.etiqueta.config(text="¡Gracias por presionar el botón!", fg="green")
+
+    Aplicacion().mainloop()
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

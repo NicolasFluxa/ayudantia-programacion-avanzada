@@ -37,6 +37,19 @@ Este ejercicio demuestra el uso de todas las cláusulas de manejo de excepciones
     c.  Llama a `leer_y_mostrar_archivo("archivo_inexistente.txt")`.
     d.  (Opcional) Intenta simular otro error de I/O si puedes (ej: un archivo
         sin permisos de lectura, aunque esto es más dependiente del sistema operativo).
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: ver en qué orden se ejecutan `try`, `except`, `else` y `finally`
+según el resultado de la operación.
+
+Al ejecutar:
+  - el programa crea el archivo `datos_prueba.txt` en la carpeta desde donde lo
+    ejecutas (si ya existía, lo sobrescribe) y lo lee: se ve el contenido, el
+    mensaje del `else` («Lectura ... completada exitosamente») y el del `finally`;
+  - luego intenta leer `archivo_inexistente.txt`: se ve el mensaje del `except
+    FileNotFoundError` y el del `finally`, pero NO el del `else`.
+
 -------------------------------------------------------------------------------
 """
 
@@ -117,3 +130,61 @@ if __name__ == "__main__":
     después de un solo `try`? ¿Por qué es esto útil?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+from contextlib import suppress
+from pathlib import Path
+
+
+def alternativa_1():
+    """Comprobar antes con `Path.exists()` (en vez de capturar FileNotFoundError).
+
+    Más corto, pero entre la comprobación y la lectura el archivo podría
+    desaparecer (o no ser legible), así que igual convendría un `try`.
+    Cuándo conviene: scripts simples donde solo quieres decidir qué mensaje dar.
+    """
+    ruta = Path("datos_prueba.txt")
+    if ruta.exists():
+        print(ruta.read_text(encoding="utf-8"))
+    else:
+        print(f"Error: el archivo '{ruta}' no fue encontrado.")
+
+
+def alternativa_2():
+    """`contextlib.suppress`: ignorar un error esperado en una línea.
+
+    Cuándo conviene: cuando que el archivo no exista NO es un problema que
+    haya que informar (por ejemplo, borrar un archivo temporal «si existe»).
+    Si necesitas avisar o hacer algo distinto, usa `try`/`except`.
+    """
+    with suppress(FileNotFoundError):
+        print(Path("archivo_inexistente.txt").read_text(encoding="utf-8"))
+    print("Seguimos sin que el programa se detenga.")
+
+
+def alternativa_3():
+    """`try`/`finally` manual: lo que `with` hace por ti.
+
+    Abre y cierra el archivo a mano. `with open(...)` es equivalente y más
+    corto: cierra el archivo aunque ocurra una excepción.
+    Cuándo conviene: casi nunca para archivos (usa `with`); sirve para
+    entender para qué existe `finally`.
+    """
+    archivo = open("datos_prueba.txt", encoding="utf-8")
+    try:
+        print(archivo.readline().strip())
+    finally:
+        archivo.close()                        # se ejecuta pase lo que pase
+        print(f"¿Archivo cerrado? {archivo.closed}")
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()
