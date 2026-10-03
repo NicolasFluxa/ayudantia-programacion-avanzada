@@ -27,6 +27,20 @@ posibles errores que puedan surgir durante la entrada de datos o la operación.
             un mensaje como "Error: No se puede dividir por cero."
     d.  (Opcional) Añade un `except Exception as e:` genérico al final para
         capturar cualquier otro error inesperado e imprimirlo.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: que el programa no se caiga cuando el usuario escribe algo
+inválido, sino que explique el problema y permita reintentar.
+
+Al ejecutar:
+  - el programa pide el dividendo y el divisor, y con datos válidos muestra
+    el resultado con 4 decimales (ej.: 10 / 4 = 2.5000) y termina;
+  - si escribes texto («abc») o divides por cero, muestra un mensaje de error
+    específico y vuelve a preguntar desde el principio;
+  - la solución limita los reintentos a 3 (así no queda en un bucle infinito);
+    al agotarlos avisa y termina. La pregunta 5 propone quitar ese límite.
+
 -------------------------------------------------------------------------------
 """
 
@@ -88,3 +102,60 @@ print("\n--- Fin del programa ---")
     sin un límite de intentos?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+def alternativa_1():
+    """Función reutilizable para leer un número (separa «leer» de «dividir»).
+
+    La solución principal mezcla entrada, conversión y cálculo en un solo
+    bloque. Aquí `leer_numero` se encarga de pedir hasta recibir un número
+    válido, y se puede reutilizar para cualquier dato numérico.
+    Cuándo conviene: cuando vas a pedir varios números en el programa.
+    """
+    def leer_numero(mensaje):
+        while True:
+            try:
+                return float(input(mensaje))
+            except ValueError:
+                print("Error: debes ingresar un número válido.")
+
+    dividendo = leer_numero("Dividendo: ")
+    divisor = leer_numero("Divisor: ")
+    try:
+        print(f"{dividendo} / {divisor} = {dividendo / divisor:.4f}")
+    except ZeroDivisionError:
+        print("Error: no se puede dividir por cero.")
+
+
+def alternativa_2():
+    """Comprobar antes (`if divisor == 0`) en vez de capturar el error.
+
+    Estilo «mirar antes de saltar»: se evita el error en lugar de manejarlo.
+    Cuándo conviene: cuando la condición es simple y fácil de comprobar (cero).
+    Para la conversión a número NO conviene: comprobar si un texto es
+    convertible a `float` es más complicado que intentarlo y capturar
+    `ValueError`. Python favorece «intentar y capturar» (EAFP).
+    """
+    while True:
+        try:
+            dividendo = float(input("Dividendo: "))
+            divisor = float(input("Divisor: "))
+        except ValueError:
+            print("Error: debes ingresar números válidos.")
+            continue
+        if divisor == 0:                       # comprobación previa
+            print("Error: el divisor no puede ser cero.")
+            continue
+        print(f"{dividendo} / {divisor} = {dividendo / divisor:.4f}")
+        break
+
+
+# alternativa_1()
+# alternativa_2()

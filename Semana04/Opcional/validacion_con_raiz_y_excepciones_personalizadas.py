@@ -34,6 +34,19 @@ excepciones personalizadas para errores específicos de tu aplicación.
     d.  Intenta retirar más dinero del que hay en la cuenta, usando
         `try-except SaldoInsuficienteError` para capturar tu excepción personalizada.
     e.  Realiza una operación válida de retiro y muestra el saldo.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: en vez de imprimir un aviso y seguir, la cuenta se NIEGA a hacer
+una operación inválida lanzando una excepción, y quien la usa decide qué
+hacer. Además se define una excepción propia para el caso «saldo insuficiente».
+
+Al ejecutar verás cinco pruebas, cada una con su resultado:
+  - crear una cuenta con saldo negativo -> `ValueError` capturado;
+  - depositar -50 y retirar -20 -> `ValueError` capturado, el saldo no cambia (200.00);
+  - retirar 300 (saldo + 100) -> `SaldoInsuficienteError` con el detalle de saldo y monto;
+  - retirar 50 -> operación válida, saldo final 150.00.
+
 -------------------------------------------------------------------------------
 """
 
@@ -157,3 +170,80 @@ if __name__ == "__main__":
     código que llama a esa función?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+def alternativa_1():
+    """Excepción personalizada que guarda DATOS, no solo un mensaje.
+
+    El código que captura el error puede usar `error.saldo` y `error.monto`
+    (por ejemplo, para mostrar «te faltan $X») sin tener que leer el texto.
+    Cuándo conviene: cuando quien captura necesita los valores para decidir.
+    """
+    class SaldoInsuficienteError(Exception):
+        def __init__(self, saldo, monto):
+            self.saldo = saldo
+            self.monto = monto
+            super().__init__(f"Saldo ${saldo:.2f}, se intentó retirar ${monto:.2f}")
+
+    def retirar(saldo, monto):
+        if monto > saldo:
+            raise SaldoInsuficienteError(saldo, monto)
+        return saldo - monto
+
+    try:
+        retirar(100, 250)
+    except SaldoInsuficienteError as error:
+        print(f"Te faltan ${error.monto - error.saldo:.2f}")
+
+
+def alternativa_2():
+    """Una excepción «raíz» de la que cuelgan todas las de la aplicación.
+
+    Con `CuentaError` como base, se puede capturar cualquier error de la
+    cuenta con un solo `except`, o ser específico si hace falta.
+    Cuándo conviene: cuando hay varias excepciones propias relacionadas.
+    """
+    class CuentaError(Exception):
+        """Base de todos los errores de la cuenta."""
+
+    class MontoInvalidoError(CuentaError):
+        pass
+
+    class SaldoInsuficienteError(CuentaError):
+        pass
+
+    for error_a_lanzar in (MontoInvalidoError("monto negativo"), SaldoInsuficienteError("no alcanza")):
+        try:
+            raise error_a_lanzar
+        except CuentaError as error:           # atrapa las dos
+            print(f"{type(error).__name__}: {error}")
+
+
+def alternativa_3():
+    """Devolver un resultado (True/False) en vez de lanzar una excepción.
+
+    Es simple, pero quien llama puede olvidar revisar el resultado y el error
+    pasa desapercibido; una excepción, en cambio, obliga a tratarlo o detiene
+    el programa. Además, con un booleano no se sabe POR QUÉ falló.
+    Cuándo conviene: cuando «no se pudo» es un resultado normal y esperado,
+    no una situación excepcional (por ejemplo, buscar algo que puede no estar).
+    """
+    def retirar(saldo, monto):
+        if monto <= 0 or monto > saldo:
+            return saldo, False
+        return saldo - monto, True
+
+    saldo, exito = retirar(200, 300)
+    print(f"¿Retiro exitoso? {exito}. Saldo: {saldo}")
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()
