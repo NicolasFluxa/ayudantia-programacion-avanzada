@@ -31,7 +31,8 @@ hipotética. Esta clase integrará propiedades, métodos de clase y estáticos.
 
 5.  **Método de Clase (`@classmethod`):**
     a.  `desde_diccionario(cls, datos_config)`:
-        i.  Recibe un diccionario `datos_config` (ej: `{"app": "MiEditor", "ver": "2.1"}`).
+        i.  Recibe un diccionario `datos_config` (ej: `{"app_nombre": "MiEditor",
+        "app_version": "2.1.0", "modo_tema": "oscuro"}`; las claves que falten usan valores por defecto).
         ii. Crea y retorna una instancia de `ConfiguracionApp` usando los valores
             del diccionario. Si falta alguna clave, usa valores por defecto razonables.
     b.  `listar_formatos_soportados(cls)`: Imprime los formatos de exportación soportados
@@ -49,6 +50,22 @@ hipotética. Esta clase integrará propiedades, métodos de clase y estáticos.
     c.  Llama al método de clase `listar_formatos_soportados()`.
     d.  Crea otra instancia usando el método de clase `desde_diccionario()`. Muestra su config.
     e.  Usa el método estático `validar_nombre_version()` con algunos ejemplos.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: juntar en una sola clase lo visto en la semana: propiedades con
+validación, un atributo de clase compartido, un constructor alternativo
+(`@classmethod`) y una utilidad que no depende del objeto (`@staticmethod`).
+
+Al ejecutar verás:
+  - la configuración de «Mi Super App» v1.0.0 en modo «claro»; luego en modo
+    «oscuro»; un `ValueError` al intentar el modo «azul»;
+  - la versión actualizada a 2.0.0 y un `ValueError` al intentar «beta»;
+  - la lista de formatos soportados (JSON, XML, CSV);
+  - dos aplicaciones creadas desde un diccionario: «Editor Pro» 3.5.2 en modo
+    oscuro, y «Utilidad Simple» con la versión por defecto 0.1.0;
+  - una tabla con seis versiones y si son válidas (solo las del tipo «X.Y.Z»).
+
 -------------------------------------------------------------------------------
 """
 import re  # Para validación de versión un poco más robusta (opcional)
@@ -225,3 +242,78 @@ print("-----------------------------------------------")
     ¿cómo modificarías la clase (constructor, propiedades) para incluirla?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+import re
+from dataclasses import dataclass
+from enum import Enum
+
+
+def alternativa_1():
+    """`Enum` para el modo de tema, en vez de una lista de textos.
+
+    Con una lista, «claro» y «claroo» son ambos textos: el error aparece al
+    validar. Con un `Enum`, los valores válidos son un conjunto cerrado y el
+    editor ayuda a escribirlos (`Tema.OSCURO`).
+    Cuándo conviene: cuando hay un conjunto fijo de opciones que se usa en
+    varios lugares del programa.
+    """
+    class Tema(Enum):
+        CLARO = "claro"
+        OSCURO = "oscuro"
+
+    tema = Tema("oscuro")                                   # convierte desde el texto
+    print(tema, tema.value)
+    try:
+        Tema("azul")
+    except ValueError as error:
+        print(f"Error: {error}")
+
+
+def alternativa_2():
+    """Validar la versión con una expresión regular.
+
+    La solución usa `split` + `isdigit`. Con `re.fullmatch` queda en una línea
+    y el patrón dice exactamente qué se acepta. Se usa [0-9] porque `isdigit`
+    y el atajo de dígitos de las regex también aceptan dígitos de otros alfabetos.
+    Cuándo conviene: formatos con reglas más complejas (versiones tipo
+    «1.2.3-beta»); para algo tan simple las dos formas sirven.
+    """
+    def version_valida(texto):
+        return isinstance(texto, str) and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", texto) is not None
+
+    for v in ("1.0.0", "2.10.3", "1.2", "alpha", "1.b.3"):
+        print(f"{v!r}: {version_valida(v)}")
+
+
+def alternativa_3():
+    """@dataclass para guardar la configuración y `**` para crearla desde un dict.
+
+    Si los campos del dataclass coinciden con las claves del diccionario,
+    `Configuracion(**datos)` reemplaza al método `desde_diccionario`. Los valores
+    por defecto salen de los campos con `=`.
+    Cuándo conviene: configuración sencilla y con claves conocidas. Si las
+    claves del diccionario no coinciden con los campos, o necesitas
+    transformar datos, el `@classmethod` da más control.
+    """
+    @dataclass
+    class Configuracion:
+        app_nombre: str = "AppDesconocida"
+        app_version: str = "0.1.0"
+        modo_tema: str = "claro"
+
+    datos = {"app_nombre": "Editor Pro", "app_version": "3.5.2"}
+    print(Configuracion(**datos))
+    print(Configuracion())                                  # todo por defecto
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

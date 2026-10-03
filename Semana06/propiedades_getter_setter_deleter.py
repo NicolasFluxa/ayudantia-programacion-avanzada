@@ -35,6 +35,21 @@ de atributos utilizando decoradores `@property`, `@<nombre_attr>.setter`, y
     c.  Acceder a la propiedad calculada `area`: `mi_circulo.area`.
     d.  Intentar asignar un valor a `area` (ej: `mi_circulo.area = 100`). ¿Qué sucede?
     e.  (Opcional) Demostrar el uso del `deleter`: `del mi_circulo.radio`.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: que `radio` se use como un atributo normal (`c.radio`, `c.radio = 7`)
+pero con validación por detrás, y que `area` se calcule sola a partir del radio.
+
+Al ejecutar verás:
+  - un círculo de radio 5.0; luego se le asigna 7.5 y el setter confirma cada
+    asignación con «Radio asignado a: ...»;
+  - un `ValueError` al asignar -3 (el radio queda en 7.5);
+  - el área con radio 7.5 (176.71) y, tras asignar radio 1, 3.14 (se recalcula sola);
+  - un `AttributeError` al intentar asignar `c1.area = 100` (es de solo lectura);
+  - el uso del `deleter` (`del c1.radio`) y el área ya sin radio (devuelve None);
+  - un `ValueError` al crear un círculo con radio -10.
+
 -------------------------------------------------------------------------------
 """
 import math
@@ -111,7 +126,7 @@ print("\n--- Intentando asignar a la propiedad area (esto dará error) ---")
 # 7d. Intentar asignar a 'area'
 try:
     if 'c1' in locals():
-        c1.area = 100 # AttributeError: can't set attribute 'area'
+        c1.area = 100 # AttributeError: la propiedad no tiene setter (es de solo lectura)
 except AttributeError as e:
     print(f"Error al intentar asignar a c1.area: {e}")
 
@@ -152,3 +167,122 @@ print("--------------------------------------------------")
     el setter ya incluye lógica de validación?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+import math
+
+
+def alternativa_1():
+    """Getters y setters explícitos (`get_radio` / `set_radio`).
+
+    Es el estilo de otros lenguajes (Java, C#). Funciona igual, pero obliga a
+    escribir `c.set_radio(7)` en lugar de `c.radio = 7`. Y si empiezas con un
+    atributo simple y luego necesitas validar, tendrías que cambiar todo el
+    código que lo usa; con `@property` el cambio no se nota desde afuera.
+    Cuándo conviene: casi nunca en Python. `@property` es la forma habitual.
+    """
+    class Circulo:
+        def __init__(self, radio):
+            self.set_radio(radio)
+
+        def get_radio(self):
+            return self._radio
+
+        def set_radio(self, valor):
+            if valor <= 0:
+                raise ValueError("El radio debe ser un número positivo.")
+            self._radio = float(valor)
+
+        def calcular_area(self):
+            return math.pi * self._radio ** 2
+
+    c = Circulo(5)
+    c.set_radio(7.5)
+    print(c.get_radio(), f"{c.calcular_area():.2f}")
+
+
+def alternativa_2():
+    """Área con `functools.cached_property`: se calcula una vez y se guarda.
+
+    Útil si calcular fuera caro. Ojo: el valor guardado NO se actualiza solo
+    si cambia el radio, así que el setter debe borrarlo (invalidar el caché).
+    Cuándo conviene: cálculos costosos que se leen muchas veces. Para un
+    cálculo barato como este, la `@property` simple de la solución principal
+    es mejor (siempre al día, sin riesgo de valores desactualizados).
+    """
+    from functools import cached_property
+
+    class Circulo:
+        def __init__(self, radio):
+            self.radio = radio
+
+        @property
+        def radio(self):
+            return self._radio
+
+        @radio.setter
+        def radio(self, valor):
+            if valor <= 0:
+                raise ValueError("El radio debe ser un número positivo.")
+            self._radio = float(valor)
+            self.__dict__.pop("area", None)                 # invalida el valor guardado
+
+        @cached_property
+        def area(self):
+            print("(calculando el área...)")
+            return math.pi * self._radio ** 2
+
+    c = Circulo(5)
+    print(f"{c.area:.2f}")                                  # calcula
+    print(f"{c.area:.2f}")                                  # reutiliza, no recalcula
+    c.radio = 10
+    print(f"{c.area:.2f}")                                  # recalcula porque el setter invalidó
+
+
+def alternativa_3():
+    """Un descriptor reutilizable para validar varios atributos igual.
+
+    Si tienes varios atributos que deben ser positivos, escribir una
+    `@property` para cada uno repite código. Un descriptor se escribe una vez
+    y se aplica a todos. (Tema avanzado: se incluye para ver hacia dónde
+    escala la idea de las propiedades.)
+    Cuándo conviene: mucha repetición de la misma validación en varias clases.
+    """
+    class Positivo:
+        def __set_name__(self, clase, nombre):
+            self.nombre = "_" + nombre
+
+        def __get__(self, objeto, clase):
+            return getattr(objeto, self.nombre)
+
+        def __set__(self, objeto, valor):
+            if valor <= 0:
+                raise ValueError("El valor debe ser positivo.")
+            setattr(objeto, self.nombre, float(valor))
+
+    class Rectangulo:
+        base = Positivo()
+        altura = Positivo()
+
+        def __init__(self, base, altura):
+            self.base = base
+            self.altura = altura
+
+    r = Rectangulo(3, 4)
+    print(r.base * r.altura)                                # 12.0
+    try:
+        r.altura = -1
+    except ValueError as error:
+        print(f"Error: {error}")
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()
