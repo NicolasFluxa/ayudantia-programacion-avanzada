@@ -17,6 +17,16 @@ La función debe:
     (todos los elementos excepto el primero).
 4.  Probar la función con diferentes listas, incluyendo una lista vacía y
     una lista con un solo elemento.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: recorrer una lista recursivamente: «suma = primer elemento + suma
+del resto», y la lista vacía suma 0.
+
+Al ejecutar verás la suma de cinco listas (15, 60, 7, 0 y 5, esta última con
+números negativos) y, al final, un mensaje de error controlado para la lista
+`[1, 2, "a", 4]`, porque contiene un texto.
+
 -------------------------------------------------------------------------------
 """
 
@@ -92,3 +102,61 @@ print("-----------------------------------")
     ¿Cómo podrías abordar la suma de una lista de forma iterativa (con un bucle)?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+def alternativa_1():
+    """Versión iterativa con `for`.
+
+    Cuándo conviene: es la forma más simple y legible de recorrer una lista,
+    y no tiene límite de profundidad (la recursiva falla cerca de 1000 elementos).
+    """
+    def suma_iterativa(lista):
+        total = 0
+        for elemento in lista:
+            total += elemento
+        return total
+
+    print(suma_iterativa([1, 2, 3, 4, 5]))                  # 15
+    print(suma_iterativa([]))                               # 0
+
+
+def alternativa_2():
+    """La función incorporada `sum()`.
+
+    Cuándo conviene: siempre que no estés practicando recursión. Es más
+    rápida y también valida los tipos (lanza `TypeError` con textos).
+    """
+    print(sum([1, 2, 3, 4, 5]))                             # 15
+    print(sum([]))                                          # 0
+    try:
+        sum([1, 2, "a"])
+    except TypeError as error:
+        print(f"Error: {error}")
+
+
+def alternativa_3():
+    """Recursión con un índice, sin crear sub-listas.
+
+    La solución principal hace `lista[1:]` en cada llamada, lo que COPIA la
+    lista cada vez (costo en memoria y tiempo). Aquí la lista no se copia:
+    solo avanza un índice.
+    Cuándo conviene: cuando quieres seguir con recursión pero con listas grandes.
+    """
+    def suma_desde(lista, i=0):
+        if i == len(lista):                                 # caso base: no quedan elementos
+            return 0
+        return lista[i] + suma_desde(lista, i + 1)
+
+    print(suma_desde([10, 20, 30]))                         # 60
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()

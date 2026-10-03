@@ -31,6 +31,19 @@ F(0) = 0, F(1) = 1, F(n) = F(n-1) + F(n-2) para n > 1.
     d.  Antes de retornar el resultado calculado, guárdalo en el `cache` con `n` como clave.
     e.  Prueba `fibonacci_memoizado(30)`, `fibonacci_memoizado(35)` e incluso valores
         más altos como `fibonacci_memoizado(50)`. Compara el rendimiento.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: comprobar por qué una recursión «ingenua» puede ser lentísima (calcula
+los mismos valores una y otra vez) y cómo la memoización (guardar resultados
+ya calculados) lo arregla.
+
+Al ejecutar verás:
+  - F(0), F(1), F(2), F(7) y F(10) = 0, 1, 1, 13 y 55, con ambas versiones;
+  - la comparación para F(30) = 832040: la recursiva simple tarda del orden de
+    décimas de segundo a segundos (según tu computador) y la memoizada,
+    microsegundos. Prueba con n = 35 y verás que la diferencia crece.
+
 -------------------------------------------------------------------------------
 """
 import time
@@ -152,3 +165,72 @@ except ValueError as e:
     de recursión)? ¿Qué error ocurre si se excede?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+from functools import lru_cache
+
+
+def alternativa_1():
+    """`@lru_cache`: memoización automática con un decorador.
+
+    Es exactamente la misma recursión simple, más una línea. La biblioteca
+    estándar guarda los resultados por ti, sin diccionario manual y sin el
+    problema del argumento por defecto mutable (`cache={}`).
+    Cuándo conviene: casi siempre que necesites memoizar una función pura en
+    código real.
+    """
+    @lru_cache(maxsize=None)
+    def fib(n):
+        if n < 2:
+            return n
+        return fib(n - 1) + fib(n - 2)
+
+    print(fib(30))                                          # 832040, al instante
+    print(fib(90))                                          # 2880067194370816120
+    print(fib.cache_info())                                 # cuántos aciertos del caché hubo
+
+
+def alternativa_2():
+    """Versión iterativa: sin recursión ni caché.
+
+    Va guardando solo los dos últimos valores. Es la más eficiente: tiempo
+    proporcional a n y memoria constante.
+    Cuándo conviene: cuando solo necesitas el n-ésimo valor y n puede ser
+    muy grande (sin riesgo de `RecursionError`).
+    """
+    def fib(n):
+        anterior, actual = 0, 1
+        for _ in range(n):
+            anterior, actual = actual, anterior + actual
+        return anterior
+
+    print([fib(i) for i in range(11)])                      # 0, 1, 1, 2, 3, 5, 8, ...
+    print(fib(30))                                          # 832040
+
+
+def alternativa_3():
+    """Generador: producir la serie de a un término por vez.
+
+    Cuándo conviene: cuando necesitas VARIOS términos seguidos (los primeros
+    20, o hasta superar cierto valor) y no solo uno.
+    """
+    def fibonacci():
+        anterior, actual = 0, 1
+        while True:
+            yield anterior
+            anterior, actual = actual, anterior + actual
+
+    from itertools import islice
+    print(list(islice(fibonacci(), 11)))                    # los primeros 11 términos
+
+
+# alternativa_1()
+# alternativa_2()
+# alternativa_3()
