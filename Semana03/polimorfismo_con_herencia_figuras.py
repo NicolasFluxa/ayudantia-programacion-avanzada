@@ -38,6 +38,18 @@ geométricas para demostrarlo.
 6.  Itera sobre la lista y, para cada figura en ella, llama a la función
     `mostrar_detalles_figura()`. Observa cómo se ejecuta el método correcto
     (de `Rectangulo` o `Circulo`) para `calcular_area` y `describir`.
+
+## OBJETIVO Y RESULTADO ESPERADO:
+## --------------------------------
+Objetivo: ver que una misma llamada (`figura.describir()`,
+`figura.calcular_area()`) hace cosas distintas según la clase real del objeto,
+sin que quien la llama tenga que preguntar de qué figura se trata.
+
+Al ejecutar verás cuatro bloques «Detalles de la Figura», uno por elemento de
+la lista: Rectángulo 10x5 (área 50.00), Círculo de radio 7 (área 153.94),
+Rectángulo 3x4 (área 12.00) y una figura genérica que avisa que su área no
+está definida (área 0.00).
+
 -------------------------------------------------------------------------------
 """
 import math # Para usar math.pi en la clase Circulo
@@ -129,3 +141,81 @@ for figura_actual in lista_de_figuras:
     como otros lenguajes)?
 -------------------------------------------------------------------------------
 """
+
+
+# =============================================================================
+# OTRAS FORMAS DE HACERLO
+# =============================================================================
+# Las funciones de abajo logran lo mismo que la solución de arriba, pero con
+# otra técnica. NO se ejecutan solas: al final hay llamadas comentadas; quita
+# el «#» de la que quieras probar. Cada una indica cuándo conviene usarla.
+
+import math
+from abc import ABC, abstractmethod
+
+
+def alternativa_1():
+    """Clase base abstracta con `abc`.
+
+    Obliga a las subclases a implementar `calcular_area`: si falta, Python
+    impide crear el objeto, en vez de devolver 0 en silencio como la base de
+    la solución principal.
+    Cuándo conviene: cuando quieres que el contrato sea obligatorio y falle
+    pronto, no recién al llamar al método.
+    """
+    class FiguraGeometrica(ABC):
+        @abstractmethod
+        def calcular_area(self):
+            ...
+
+    class Rectangulo(FiguraGeometrica):
+        def __init__(self, base, altura):
+            self.base, self.altura = base, altura
+
+        def calcular_area(self):
+            return self.base * self.altura
+
+    class Circulo(FiguraGeometrica):
+        def __init__(self, radio):
+            self.radio = radio
+
+        def calcular_area(self):
+            return math.pi * self.radio ** 2
+
+    for figura in (Rectangulo(10, 5), Circulo(7)):
+        print(f"{type(figura).__name__}: {figura.calcular_area():.2f}")
+    try:
+        FiguraGeometrica()
+    except TypeError as error:
+        print(f"Error esperado: {error}")
+
+
+def alternativa_2():
+    """Sin clase base (duck typing): basta con que cada clase tenga el método.
+
+    El polimorfismo no necesita herencia en Python. Las clases son
+    independientes y la función solo exige que exista `calcular_area()`.
+    Cuándo conviene: cuando no hay código compartido que justifique una base.
+    Es el tema del siguiente ejercicio (`duck_typing_y_protocolos.py`).
+    """
+    class Rectangulo:
+        def __init__(self, base, altura):
+            self.base, self.altura = base, altura
+
+        def calcular_area(self):
+            return self.base * self.altura
+
+    class Circulo:
+        def __init__(self, radio):
+            self.radio = radio
+
+        def calcular_area(self):
+            return math.pi * self.radio ** 2
+
+    figuras = [Rectangulo(10, 5), Circulo(7), Rectangulo(3, 4)]
+    print([round(f.calcular_area(), 2) for f in figuras])
+    print(f"Área total: {sum(f.calcular_area() for f in figuras):.2f}")
+
+
+# alternativa_1()
+# alternativa_2()
